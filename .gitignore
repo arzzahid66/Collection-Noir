@@ -1,0 +1,40 @@
+# Node
+node_modules/
+# The development server and the production build get a directory each, so
+# neither can leave chunks the other cannot read. See frontend/next.config.mjs.
+.next/
+.next-dev/
+.next-prod/
+out/
+npm-debug.log*
+.pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build artefacts
+frontend/.vercel
+backend/.pytest_cache/
+
+.vercel
+
+# The pre-reset repository, kept as a safety net. Never publish it.
+.git-old-backup/
+
+# Browser-test scratch output
+.playwright-mcp/

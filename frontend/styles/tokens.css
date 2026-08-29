@@ -1,0 +1,141 @@
+/* Collection Noir design tokens.
+ *
+ * Values are taken from the frontend correction brief, section 0, which the
+ * client has confirmed is authoritative over both the Website Build
+ * Specification and the earlier approved design prototype. Where the three
+ * disagree, the correction brief wins.
+ *
+ * Two corrections in this revision are worth naming, because both reverse an
+ * earlier deliberate decision and both are logged in PENDING_CHANGES.md:
+ *
+ *   - Ink and Umber have swapped register. Ink is now #1C1714, the warm near
+ *     black, and Umber is #2B2722, the footer ground. The specification had
+ *     Ink at #2B2722 and Umber at #1C1814, and the copy lint banned #1C1714
+ *     by name as a value the brand had moved away from. The brief sets it as
+ *     the colour of all body text and headings, so the lint has been updated.
+ *   - There is one typeface on this site. Cormorant Garamond carries body
+ *     copy, micro labels, prices and form fields as well as headings. The
+ *     earlier build set everything except headings in Arial, which is what
+ *     made every paragraph render as system sans.
+ */
+
+:root {
+  /* All body text and headings. A warm near black, never #000. copy-lint-ok */
+  --cn-ink: #1c1714;
+  /* Footer ground only. */
+  --cn-umber: #2b2722;
+  /* Italic captions, call to action underlines, secondary accent. */
+  --cn-bark: #9c8272;
+  /* Uppercase eyebrow labels and small accent text. */
+  --cn-clay: #c4ad97;
+  /* Page background. */
+  --cn-ivory: #faf8f3;
+
+  /* Image frame fill and tinted panels. A slightly warmer, slightly darker
+   * Ivory, so an image that does not fill its frame reads as an intentional
+   * mount rather than a broken or missing image. Section 07. */
+  --cn-letterbox: #f0ece3;
+
+  /* Text on dark grounds. The warmer of the two carries headings and
+   * emphasis, the cooler carries body copy. */
+  --cn-on-dark-strong: #f2ede6;
+  --cn-on-dark: #e8e4dc;
+
+  /* Structural hairlines and section dividers. Section 02 rules out
+   * horizontal rules used as a decorative device, which is a separate
+   * thing.                                                    copy-lint-ok */
+  --cn-hairline: #eae4d9;
+  /* The rule across the footer base row, on the Umber ground. */
+  --cn-hairline-dark: #2e2822;
+  --cn-hairline-weight: 1px;
+
+  /* Form input underlines. */
+  --cn-field: #e0d9cc;
+
+  /* Button outlines, the small download icon squares, and the short rule
+   * between a product's price and its call to action. A touch warmer than
+   * the field underline, and the specification lists the two separately, so
+   * they are two tokens rather than one shared value.        section 1.3 */
+  --cn-button-border: #dcd4c6;
+
+  /* The "As Seen In" chips on the atelier page: outline and text. The text
+   * is a cooler grey than Bark, which is what keeps a row of five
+   * publication names from competing with the copy above it.  section 1.3 */
+  --cn-press-border: #e5ded2;
+  --cn-press-text: #8c8378;
+
+  /* Footer eyebrows and the links along the base row. Quieter than the
+   * footer body copy, louder than the tagline.                section 1.3 */
+  --cn-footer-label: #bdb4a6;
+
+  /* The hero provenance line. Warmer than the hero caption beneath it, so
+   * the two read as separate registers over the photograph.   section 1.3 */
+  --cn-hero-eyebrow: #e8dfd0;
+
+  /* The label inside an image frame that has no photograph attached yet.
+   * The one place on the site set in a monospace face, deliberately: it
+   * marks a slot waiting on an asset rather than finished copy. section 1.5 */
+  --cn-placeholder: #a69884;
+
+  /* The tagline at the foot of the footer, set quieter than the links. */
+  --cn-footer-quiet: #5c5449;
+
+  /* One typeface, no secondary font. Even the small uppercase micro labels
+   * are Cormorant Light. Georgia is the fallback rather than a sans, so a
+   * failed webfont load still reads as a serif. */
+  --cn-font: var(--font-cormorant), "Cormorant Garamond", Georgia,
+    "Times New Roman", serif;
+
+  /* Type scale, section 1.4 of the specification.
+   *
+   * Note where 15px and 16px fall. Italic captions and prices are 15px, the
+   * same size as body copy, and read as a different register through the
+   * italic cut rather than through size. Only three things are 16px: the
+   * product page's Enquire call to action, the trade page's "Register for
+   * Trade Access" sub header, and a form's success message. */
+  --cn-size-micro: 11px; /* eyebrows, breadcrumbs, form labels, nav, links */
+  --cn-size-swatch: 9px; /* the material name beneath a product swatch */
+  --cn-size-body: 15px; /* paragraphs, italic captions, prices, spec values */
+  --cn-size-cta: 16px; /* the Enquire CTA, the trade sub header */
+  --cn-size-caption: 16px; /* form success messages */
+  --cn-size-card: 20px; /* card names and sub headers, everywhere */
+  --cn-size-statement: 22px; /* the italic homepage statement */
+  --cn-size-section: 23px; /* section titles */
+  --cn-size-collection: 26px; /* the collection index title */
+  --cn-size-page: 30px; /* page titles */
+  --cn-size-product: 32px; /* a product name */
+  --cn-size-headline: 40px; /* hero and section headlines */
+
+  /* Tracking belongs only on uppercase micro labels. Body copy and addresses
+   * carry none.
+   *
+   * Section 1.4 sets four values rather than one, and which applies is a
+   * property of the context, not of the size: breadcrumbs and tabs track at
+   * 0.22em, a card eyebrow at 0.24em, a page eyebrow at 0.26em. A single
+   * shared token cannot express that, so there are four. */
+  --cn-track-20: 0.2em;
+  --cn-track-22: 0.22em;
+  --cn-track-24: 0.24em;
+  --cn-track-26: 0.26em;
+
+  /* Layout. The page gutter is 48px left and right on every page at every
+   * breakpoint above mobile, and the header, main content and footer all
+   * share it so the logo, headline and footer address align on one vertical
+   * line. */
+  --cn-page-padding: 48px;
+  --cn-section-padding: 56px;
+  --cn-column-gap: 48px;
+  --cn-grid-gap: 28px;
+  /* Between major page sections, as opposed to between blocks. */
+  --cn-major-gap: 96px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --cn-page-padding: 24px;
+    --cn-section-padding: 40px;
+    --cn-column-gap: 28px;
+    --cn-grid-gap: 20px;
+    --cn-major-gap: 64px;
+  }
+}

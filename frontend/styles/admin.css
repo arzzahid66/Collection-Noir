@@ -1,0 +1,360 @@
+/* Administration console.
+ *
+ * Uses the same palette as the site so the person editing sees the brand they
+ * are editing, but is laid out for density rather than for reading.
+ */
+
+.admin {
+  min-height: 100vh;
+  background: var(--cn-ivory);
+  font-family: var(--cn-font);
+  font-size: 13px;
+  color: var(--cn-ink);
+}
+
+.admin__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 32px;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+  position: sticky;
+  top: 0;
+  background: var(--cn-ivory);
+  z-index: 10;
+}
+
+.admin__title {
+  font-family: var(--cn-font);
+  font-size: 15px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.admin__who {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--cn-clay);
+}
+
+.admin__tabs {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 12px 32px;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.admin__tab {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.admin__tab[data-active="true"] {
+  color: var(--cn-ink);
+}
+
+.admin__body {
+  padding: 28px 32px 80px;
+}
+
+.admin__grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .admin__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.admin-list li {
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.admin-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 10px 8px;
+  cursor: pointer;
+  font-family: var(--cn-font);
+  font-size: 12px;
+  color: var(--cn-ink);
+}
+
+.admin-list button[data-active="true"] {
+  background: var(--cn-on-light);
+}
+
+.admin-list .meta {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--cn-clay);
+  margin-top: 2px;
+}
+
+.admin-form {
+  display: grid;
+  gap: 16px;
+  max-width: 640px;
+}
+
+.admin-form .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .admin-form .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-field {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-field label {
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+}
+
+.admin-field input,
+.admin-field textarea,
+.admin-field select {
+  font-family: var(--cn-font);
+  font-size: 13px;
+  color: var(--cn-ink);
+  background: var(--cn-ivory);
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.admin-field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.admin-field textarea.tall {
+  min-height: 460px;
+  font-size: 12px;
+}
+
+.admin-field .hint {
+  font-size: 10px;
+  color: var(--cn-clay);
+  letter-spacing: 0.5px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-button {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--cn-ink);
+  background: none;
+  border: 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-ink);
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.admin-button:disabled {
+  color: var(--cn-clay);
+  border-bottom-color: var(--cn-clay);
+  cursor: default;
+}
+
+.admin-button--quiet {
+  font-family: var(--cn-font);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  border-bottom-color: var(--cn-clay);
+}
+
+.admin-status {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--cn-umber);
+}
+
+.admin-status[data-tone="error"] {
+  color: var(--cn-umber);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-clay);
+}
+
+/* --- image panel ------------------------------------------------------- */
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.image-tile {
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+  padding: 8px;
+}
+
+.image-tile__preview {
+  width: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+  margin-bottom: 8px;
+}
+
+.image-tile__preview.ratio-3-2 {
+  aspect-ratio: 3 / 2;
+}
+
+.image-tile__preview.ratio-4-5 {
+  aspect-ratio: 4 / 5;
+}
+
+.image-tile__meta {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--cn-clay);
+  word-break: break-all;
+}
+
+/* The ratio badge. Green reading within tolerance, amber beyond it.
+ * These two are the only colours in the codebase from outside the palette,
+ * and they exist only in the console, never on the public site. */
+.ratio-badge {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  margin: 6px 0;
+  border: var(--cn-hairline-weight) solid;
+}
+
+.ratio-badge[data-ok="true"] {
+  color: #4a6b4a;
+  border-color: #4a6b4a;
+}
+
+.ratio-badge[data-ok="false"] {
+  color: #8a6a2f;
+  border-color: #8a6a2f;
+}
+
+.attached-image {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.attached-image__thumb {
+  width: 90px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+}
+
+.admin-note {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--cn-bark);
+  border-left: 2px solid var(--cn-hairline);
+  padding-left: 14px;
+  margin: 0 0 24px;
+  max-width: 70ch;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  font-weight: 400;
+  padding: 9px 10px 9px 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+  vertical-align: top;
+}
+
+.admin-table th {
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+}
+
+/* --- sign in ----------------------------------------------------------- */
+
+.admin-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.admin-login__panel {
+  width: 100%;
+  max-width: 340px;
+}
+
+.admin-login__panel h1 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+  padding: 2px 7px;
+  margin-left: 8px;
+}

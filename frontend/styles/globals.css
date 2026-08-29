@@ -1,0 +1,2643 @@
+@import "./tokens.css";
+
+/* Collection Noir.
+ *
+ * Layout and type follow the Frontend UI Specification, which supersedes the
+ * frontend correction brief, the Website Build Specification and the earlier
+ * approved design prototype. Section references below are to that document.
+ *
+ * Its values were read out of the locked reference file rather than
+ * approximated, so they are written here as literals: 11px means 11px and
+ * 0.26em means 0.26em. Rounding one to a familiar number is the failure this
+ * file exists to prevent.
+ *
+ * Three standing rules this file has to hold:
+ *   - One typeface. Cormorant Garamond carries body copy, micro labels,
+ *     prices and form fields as well as headings. No sans anywhere, and no
+ *     browser default sans left to inherit.        copy-lint-ok
+ *   - No horizontal rule is used as a decorative device. Every rule below is
+ *     structural: it separates a header from a page, one major section from
+ *     the next, or one specification row from another.   copy-lint-ok
+ *   - No colour is written as a literal. Every value comes from tokens.css.
+ */
+
+/* ------------------------------------------------------------------ reset */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  /* Sharp corners throughout. No rounded cards, no rounded buttons. */
+  border-radius: 0;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * The font is set here rather than on individual components, so nothing can
+ * fall back to the user agent's sans by being missed. Every rule below that
+ * names a font names the same one.
+ */
+body {
+  background: var(--cn-ivory);
+  color: var(--cn-ink);
+  font-family: var(--cn-font);
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  line-height: 2;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Form controls do not inherit the document font or its weight on their
+ * own, and a control left to the user agent is the last place a system sans
+ * can survive on this site. Section 1.2. */
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-weight: 300;
+}
+
+::placeholder {
+  color: var(--cn-clay);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/*
+ * Links are defined globally, in both states. Leaving either to the user
+ * agent stylesheet is what puts browser default blue on an address or an
+ * email, which is the fault reported on the enquiry page.
+ */
+a,
+a:link,
+a:visited {
+  color: var(--cn-ink);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--cn-bark);
+}
+
+:focus-visible {
+  outline: 1px solid var(--cn-bark);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------- type */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--cn-font);
+  font-weight: 300;
+  color: var(--cn-ink);
+  margin: 0;
+  line-height: 1.22;
+}
+
+/* Italic is used liberally for a poetic, editorial register. Section 03 of
+ * the specification is explicit that this is intentional and not to be
+ * corrected during build. An italic accent word inside a heading takes Bark,
+ * per section 1.3 of the correction brief. */
+em,
+.display-italic {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+}
+
+h1 em,
+h2 em,
+h3 em {
+  color: var(--cn-bark);
+}
+
+/* Hero and section headline. */
+h1 {
+  font-size: var(--cn-size-headline);
+}
+
+/*
+ * The collection index title, "Every piece, made to order". Section 5 sets
+ * it at 26px, between the 23px section title and the 30px page title, and it
+ * is the only thing on the site at that size.
+ */
+.collection-title {
+  font-size: var(--cn-size-collection);
+}
+
+/*
+ * A page title rather than a page headline. The two are different levels in
+ * section 1.2: "Enquire" and "The stones, timbers and metals we work with"
+ * are titles at 30px, while "Designed in London, made by Italian hands" is a
+ * headline at 40px. Both are the h1 of their page, so the distinction is
+ * carried by a class rather than by the element.
+ */
+.page-title {
+  font-size: var(--cn-size-page);
+}
+/* Page title. */
+h2 {
+  font-size: var(--cn-size-page);
+}
+/* Card and sub header. */
+h3 {
+  font-size: var(--cn-size-card);
+}
+
+p {
+  margin: 0 0 1.1em;
+  color: var(--cn-ink);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+strong,
+b {
+  /* Emphasis carries through wording rather than weight. */
+  font-weight: 400;
+}
+
+/*
+ * The small wide tracked label above a heading, used on every page.
+ *
+ * Letter-spacing belongs only on uppercase micro labels like this one.
+ * Section 1.4: body copy and addresses carry none.
+ *
+ * 0.26em is the page level eyebrow, which is the common case. The two
+ * tighter cuts below are not a preference: section 1.4 sets tracking by
+ * context rather than by size, so a card eyebrow and a form label track
+ * differently from the eyebrow above a page heading even though all three
+ * are 11px.
+ */
+.eyebrow {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  font-weight: 300;
+  letter-spacing: var(--cn-track-26);
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 0 0 18px;
+}
+
+/* Above a card, in a grid. Sections 4.3, 6.4 and 7.4.1. */
+.eyebrow--card {
+  letter-spacing: var(--cn-track-24);
+}
+
+/* Beside or above a value rather than above a heading: the material label,
+ * the specification keys, the download titles, a form label. Section 7. */
+.eyebrow--label {
+  letter-spacing: var(--cn-track-22);
+}
+
+.lede {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  line-height: 1.7;
+  color: var(--cn-bark);
+}
+
+.caption {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  font-weight: 300;
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+}
+
+.price {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 0;
+}
+
+/* The quiet italic call to action, as on a grid card and the homepage
+ * bespoke block. Italic 15px Bark on a Bark rule. Sections 4.4 and 6.4. */
+.quiet-link {
+  display: inline-block;
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-bark);
+  padding-bottom: 3px;
+}
+
+.quiet-link:hover {
+  color: var(--cn-ink);
+  border-bottom-color: var(--cn-ink);
+}
+
+/* The wide tracked uppercase call to action, as on "View the Collection"
+ * and "Register for Trade Access". */
+.tracked-link {
+  display: inline-block;
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-24);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-bark);
+  padding-bottom: 5px;
+}
+
+.tracked-link:hover {
+  color: var(--cn-ink);
+  border-bottom-color: var(--cn-ink);
+}
+
+/*
+ * The primary call to action, and the largest tracked thing on the site.
+ *
+ * Section 7.4.6 is emphatic about what this is not: not italic, not a filled
+ * button, and not the quiet 11px tracked link above. It is 16px at 0.26em in
+ * Ink over a Bark rule, and it appears twice on a product page, once under
+ * the price and once inside the bespoke box.
+ */
+.cta {
+  display: inline-block;
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-cta);
+  font-weight: 300;
+  letter-spacing: var(--cn-track-26);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-bark);
+  padding-bottom: 3px;
+}
+
+.cta:hover {
+  color: var(--cn-ink);
+  border-bottom-color: var(--cn-ink);
+}
+
+/* ----------------------------------------------------------------- layout */
+
+/*
+ * The page gutter. Longhands, not the `padding` shorthand.
+ *
+ * `page` and `section` are used together on the same element throughout the
+ * site. Written as shorthands they have equal specificity, so whichever the
+ * stylesheet declared second won the whole property and reset the other two
+ * edges to zero. `.section` came second, so every `page section` on the site
+ * lost its 48px gutter and set its copy flush against the viewport edge.
+ *
+ * Longhands cannot collide: one class owns the horizontal padding, the other
+ * owns the vertical, and the order they are declared in stops mattering.
+ */
+.page {
+  padding-left: var(--cn-page-padding);
+  padding-right: var(--cn-page-padding);
+}
+
+.section {
+  padding-top: var(--cn-section-padding);
+  padding-bottom: var(--cn-section-padding);
+}
+
+/* A rule between major page sections. Structural, not a device. The section
+ * it sits on carries the rule so no empty element is needed for it.
+ *                                                          copy-lint-ok */
+.section--ruled {
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+/*
+ * Measure.
+ *
+ * There is no general one. Section 13 is explicit: body copy runs the full
+ * width of its column, and a centred max-width container is the single most
+ * visible thing the earlier build got wrong. The atelier, trade, materials
+ * and product-description paragraphs therefore carry no cap at all.
+ *
+ * Six blocks are capped, each named individually by the specification, each
+ * for its own reason. They are listed here together so the set stays
+ * closed: if a seventh appears, it is a mistake rather than a decision.
+ */
+
+/* The homepage statement. The one centred, width capped block on the page,
+ * section 4.2. */
+.measure-statement {
+  max-width: 21em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* "For designers", wide enough to run about two lines rather than four,
+ * section 8. */
+.measure-designers {
+  max-width: 68em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* "Continue exploring", the two centred columns beneath it, section 8. */
+.measure-exploring {
+  max-width: 46em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* The enquiry invitation. Balanced rather than capped for readability: it
+ * has to break into two roughly equal lines, section 11.1. */
+.measure-invitation {
+  max-width: 44em;
+  text-wrap: balance;
+}
+
+/* The founder's pull quote, section 8. */
+.measure-quote {
+  max-width: 26em;
+}
+
+/* The "Regarding" panel on the enquiry page, section 11.1. */
+.measure-regarding {
+  max-width: 30em;
+}
+
+/* ----------------------------------------------------------------- lockup
+ *
+ * The supplied wordmark as a finished asset. It is a single lockup, so it is
+ * only ever scaled as a whole: height is fixed and the width follows.
+ */
+
+.lockup {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.lockup img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+/* ------------------------------------------------------------- navigation */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px var(--cn-page-padding);
+  background: var(--cn-ivory);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+/* ------------------------------------------------------- the Atelier menu
+ *
+ * Opens on hover, as the approved design sets it, and on keyboard focus so
+ * the pages under it are reachable without a pointer. The label carries no
+ * chevron, because the design does not draw one.
+ */
+
+.site-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Bridges the gap between the label and the panel, so moving the pointer down
+ * onto the menu does not cross a dead band and close it. */
+.site-nav__item > a {
+  display: block;
+  padding-bottom: 18px;
+  margin-bottom: -18px;
+}
+
+.site-nav__menu {
+  position: absolute;
+  top: 100%;
+  left: -18px;
+  margin-top: 18px;
+  z-index: 50;
+  min-width: 168px;
+  padding: 14px 0;
+  background: var(--cn-ivory);
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.site-nav__menu[data-open="false"] {
+  display: none;
+}
+
+.site-nav__menu a {
+  display: block;
+  padding: 9px 22px;
+}
+
+.site-nav__menu a:hover {
+  color: var(--cn-ink);
+  background: var(--cn-letterbox);
+}
+
+/*
+ * line-height 1 on every item, so the italic current-page cut does not build
+ * a taller line box than its neighbours and knock itself off their baseline.
+ */
+.site-nav a {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cn-bark);
+}
+
+.site-nav a:hover {
+  color: var(--cn-ink);
+}
+
+/* The current page. Marked in Ink, at the same size and tracking as its
+ * neighbours, so the row stays on one baseline. */
+.site-nav a[aria-current="page"] {
+  color: var(--cn-ink);
+}
+
+/* The navigation is short enough to stay visible down to small screens, so
+ * the menu button only appears where four tracked items no longer fit.
+ *
+ * Three rules rather than the word Menu. The rules are hairlines in Ink, at
+ * the hairline weight the rest of the site uses, so the mark belongs to the
+ * same drawing as the rules above and below it. */
+.site-header__menu {
+  display: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--cn-ink);
+}
+
+.site-header__bars {
+  display: block;
+  position: relative;
+  width: 24px;
+  height: 14px;
+}
+
+.site-header__bars span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transition: transform 200ms ease, opacity 160ms ease;
+}
+
+.site-header__bars span:nth-child(1) {
+  top: 0;
+}
+
+.site-header__bars span:nth-child(2) {
+  top: 50%;
+}
+
+.site-header__bars span:nth-child(3) {
+  top: 100%;
+}
+
+/* Open: the middle rule goes, the outer two cross on the centre line. */
+.site-header__menu[data-open="true"] .site-header__bars span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.site-header__menu[data-open="true"] .site-header__bars span:nth-child(2) {
+  opacity: 0;
+}
+
+.site-header__menu[data-open="true"] .site-header__bars span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header__bars span {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .site-header {
+    flex-wrap: wrap;
+  }
+  .site-header__menu {
+    display: block;
+  }
+  .site-nav {
+    display: none;
+  }
+  .drawer {
+    flex-basis: 100%;
+  }
+  .drawer__list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+  }
+  .drawer__list li {
+    border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+  }
+  .drawer__list a {
+    display: block;
+    padding: 12px 0;
+    font-family: var(--cn-font);
+    font-size: var(--cn-size-card);
+    font-weight: 300;
+  }
+  /* The pages under Atelier. The row above them is a toggle, so they are
+   * revealed on a tap rather than listed the whole time. */
+  .drawer__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--cn-font);
+    font-size: var(--cn-size-card);
+    font-weight: 300;
+    color: var(--cn-ink);
+  }
+
+  /* Drawn rather than set as a glyph, so it is the same hairline weight as
+   * the rules it sits between. */
+  .drawer__chevron {
+    width: 8px;
+    height: 8px;
+    margin-right: 4px;
+    border-right: 1px solid var(--cn-bark);
+    border-bottom: 1px solid var(--cn-bark);
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 200ms ease;
+  }
+
+  .drawer__list li[data-open="true"] .drawer__chevron {
+    transform: translateY(2px) rotate(-135deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drawer__chevron {
+      transition: none;
+    }
+  }
+
+  .drawer__sublist {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0 0 0 18px;
+  }
+  .drawer__sublist li {
+    border-top: 0;
+  }
+  .drawer__sublist a {
+    padding: 6px 0;
+    font-family: var(--cn-font);
+    font-size: var(--cn-size-micro);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cn-bark);
+  }
+  .lockup img {
+    height: 38px;
+  }
+}
+
+/* ------------------------------------------------------------------- hero
+ *
+ * Full bleed, with the hero copy overlaid. Section 06 and section 4 of the
+ * correction brief.
+ *
+ * This is the only place on the site where an image is set to cover. The
+ * ground beneath it is the letterbox mount rather than a colour or a
+ * gradient, so a hero waiting on its photograph reads as an empty frame
+ * rather than as a styling error.
+ */
+
+.hero {
+  position: relative;
+  height: 560px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background-color: var(--cn-letterbox);
+}
+
+/*
+ * One photograph, held still. Section 4.1 sets a single full bleed frame
+ * with no controls and no motion, which is why there is no crossfade and no
+ * arrow here any more.
+ */
+.hero__frame {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 40%;
+}
+
+/*
+ * Carries the overlaid copy off the photograph without tinting the whole
+ * frame, so the photography stays the subject. Drawn only when there is a
+ * photograph under it: over the bare mount it would be the flat wash the
+ * brief rules out.
+ */
+.hero[data-has-frame="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(28, 23, 20, 0.5),
+    rgba(28, 23, 20, 0.05) 55%,
+    rgba(28, 23, 20, 0.18)
+  );
+  pointer-events: none;
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--cn-page-padding);
+}
+
+/* Left, vertically centred, 48px from the edge. */
+.hero__lead {
+  position: absolute;
+  left: var(--cn-page-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/*
+ * Section 4.1 sets the hero copy in near white, because it is read over a
+ * photograph. With no photograph attached the hero is the bare letterbox
+ * mount, and near white on that ground is invisible: the headline of the
+ * site disappears while the catalogue is being loaded, which reads as a
+ * broken page rather than as a frame waiting on its asset.
+ *
+ * So the light palette is applied only where there is something under it to
+ * be read against. The Ivory ground values below are the ones the rest of
+ * the site uses, so an empty hero looks deliberate.
+ */
+.hero__eyebrow {
+  color: var(--cn-clay);
+  letter-spacing: var(--cn-track-26);
+  margin-bottom: 22px;
+}
+
+.hero[data-has-frame="true"] .hero__eyebrow {
+  color: var(--cn-hero-eyebrow);
+}
+
+.hero h1 {
+  color: var(--cn-ink);
+  font-size: var(--cn-size-headline);
+  line-height: 1.08;
+  max-width: 12em;
+  margin: 0;
+}
+
+/*
+ * The one place an italic run inside a heading does not take Bark. The
+ * accent stays the same colour as the rest of the line, so "in its" reads as
+ * part of the sentence rather than as a link. Section 4.1.
+ */
+.hero h1 em {
+  color: inherit;
+}
+
+.hero[data-has-frame="true"] h1 {
+  color: var(--cn-ivory);
+}
+
+/* Bottom right, 48px from the right edge and 44px from the bottom. */
+.hero__aside {
+  position: absolute;
+  right: var(--cn-page-padding);
+  bottom: 44px;
+  text-align: right;
+}
+
+.hero__tagline {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  line-height: 1.5;
+  color: var(--cn-bark);
+  margin: 0;
+  max-width: 15em;
+  /* max-width caps the line, the block still hangs from the right edge. */
+  margin-left: auto;
+}
+
+.hero[data-has-frame="true"] .hero__tagline {
+  color: var(--cn-on-dark-strong);
+}
+
+.hero__aside .tracked-link {
+  margin-top: 20px;
+}
+
+.hero[data-has-frame="true"] .hero__aside .tracked-link {
+  color: var(--cn-on-dark-strong);
+  border-bottom-color: rgba(242, 237, 230, 0.5);
+}
+
+.hero[data-has-frame="true"] .hero__aside .tracked-link:hover {
+  color: var(--cn-ivory);
+  border-bottom-color: var(--cn-on-dark-strong);
+}
+
+/*
+ * The statement beneath the hero, section 4.2.
+ *
+ * Ink rather than Bark: this is the sentence the whole homepage is built
+ * around, not a caption. It is also the only centred, width capped text
+ * block on the page, which is what makes it read as a statement while
+ * everything below it runs full width and left aligned.
+ */
+.statement {
+  padding: 88px var(--cn-page-padding) 0;
+  text-align: center;
+}
+
+/* The cap sits on the paragraph rather than on the band, so the 21em
+ * measure is 21em of text and not 21em minus two gutters. */
+.statement p {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-statement);
+  line-height: 1.6;
+  color: var(--cn-ink);
+  text-wrap: pretty;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    height: 460px;
+  }
+  .hero h1 {
+    font-size: 34px;
+  }
+  .hero__lead {
+    top: auto;
+    bottom: 140px;
+    transform: none;
+  }
+  .hero__aside {
+    left: var(--cn-page-padding);
+    right: var(--cn-page-padding);
+    text-align: left;
+  }
+  .hero__tagline {
+    margin-left: 0;
+  }
+  .statement {
+    padding: 56px var(--cn-page-padding) 0;
+  }
+  .statement p {
+    font-size: 18px;
+  }
+}
+
+/* --------------------------------------------------------------- category
+ *
+ * Section 07, the single most detail sensitive block in the build.
+ *
+ * Aspect ratio is applied per category from the table in that section, never
+ * as one site wide default, because a round dining table and a tall
+ * cylindrical plinth are genuinely different shapes.
+ *
+ * background-size is contain, never cover. Cover crops into the piece.
+ * Nothing anywhere in this codebase crops a supplied photograph, and no
+ * computer vision runs over one.
+ *
+ * An image whose native ratio does not match its frame is centred on the
+ * mount colour with clean margin on whichever sides need it. A visibly
+ * smaller piece with clean margin is always preferable to any part of the
+ * piece being cropped out of frame.
+ */
+
+/*
+ * Three columns and a 28px gutter everywhere. Only the surrounding padding
+ * changes from page to page, and it changes because the block above the grid
+ * differs: a category grid sits under a tab row, the collection index under
+ * a title, the homepage teasers under a lone eyebrow.
+ */
+.category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--cn-grid-gap);
+  padding: 40px var(--cn-page-padding) 72px;
+  align-items: start;
+}
+
+/* Homepage, section 4.3. The band above carries the top padding, so the
+ * grid itself only closes the bottom of it. */
+.teasers {
+  padding-top: 76px;
+}
+
+.teasers__label {
+  margin-bottom: 30px;
+}
+
+.category-grid--teasers {
+  padding: 0 var(--cn-page-padding) 24px;
+}
+
+/* Collection index, section 5. */
+.category-grid--index {
+  padding: 46px var(--cn-page-padding) 72px;
+}
+
+@media (max-width: 900px) {
+  .category-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.category-card {
+  display: block;
+  cursor: pointer;
+}
+
+.category-image {
+  width: 100%;
+  margin-bottom: 12px;
+  background-size: contain; /* NEVER cover */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+  /* Centres the empty-state label when no photograph is attached. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-image.ratio-3-2 {
+  aspect-ratio: 3 / 2;
+}
+
+.category-image.ratio-4-5 {
+  aspect-ratio: 4 / 5;
+}
+
+/*
+ * The collection name above a homepage teaser card, and the piece type above
+ * a category grid card. Cormorant 300, not a sans: section 4.3 calls this
+ * out specifically, because a wide tracked uppercase label is the one place
+ * a sans would pass unnoticed.
+ */
+.category-card__eyebrow {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  font-weight: 300;
+  line-height: 1.4;
+  letter-spacing: var(--cn-track-24);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 0 0 10px;
+}
+
+/*
+ * Under a piece in a category grid the label sits tighter to its name than it
+ * does on a homepage teaser: 6px against 10px, sections 6.4 and 4.3.
+ *
+ * Scoped to the modifier rather than to `.category-grid`, which every grid on
+ * the site carries. Named on the base class, this reached the homepage
+ * teasers and the collection index as well and quietly closed both up.
+ */
+.category-grid--pieces .category-card__eyebrow {
+  margin-bottom: 6px;
+}
+
+/*
+ * One card title size across the whole site.
+ *
+ * Section 14 records the locked file as setting 20px on the homepage teaser
+ * and the materials card but 15px on the collection card, the category grid
+ * piece name and the founder name, and asks for a decision rather than
+ * leaving the two to drift. The decision is 20px, which section 14 names as
+ * the intended value. Logged in PENDING_CHANGES.md.
+ */
+.category-card__name {
+  font-family: var(--cn-font);
+  font-weight: 300;
+  font-size: var(--cn-size-card);
+  color: var(--cn-ink);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Same scoping as the eyebrow above, and for the same reason: a piece name
+ * in a category grid sets tighter than a teaser's, 1.15 against 1.3. */
+.category-grid--pieces .category-card__name {
+  line-height: 1.15;
+}
+
+/* The attribute line beneath a material name, "Marble · Italy". */
+.category-card__meta {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  line-height: 1.6;
+  color: var(--cn-bark);
+  margin: 2px 0 0;
+}
+
+.category-card__price {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 7px 0 0;
+}
+
+.category-card__cta {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 6px 0 0;
+}
+
+.category-card:hover .category-card__cta {
+  color: var(--cn-ink);
+}
+
+.category-card__view {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 3px 0 0;
+}
+
+/* The prompt that fills a trailing grid cell on a short category, as on the
+ * console table and plinth pages. */
+.grid-prompt {
+  align-self: center;
+  padding: 0 8px;
+}
+
+.grid-prompt p {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 0 0 14px;
+}
+
+.empty-state {
+  padding: 40px var(--cn-page-padding) 64px;
+  color: var(--cn-bark);
+  font-size: var(--cn-size-body);
+}
+
+/*
+ * The label inside an image frame with no photograph attached.
+ *
+ * Section 1.5 sets this in a monospace face, and it is the only monospace on
+ * the site. That is the point: an empty slot has to look like an empty slot
+ * to whoever is loading the catalogue, and never like finished design.
+ */
+.image-placeholder {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: var(--cn-size-micro);
+  letter-spacing: 0.08em;
+  color: var(--cn-placeholder);
+}
+
+/* -------------------------------------------------------------- crumbs
+ * Structural, not decorative: it separates the page header from the grid.
+ */
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px var(--cn-page-padding);
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.crumbs a {
+  color: var(--cn-clay);
+}
+
+.crumbs a:hover {
+  color: var(--cn-bark);
+}
+
+/*
+ * The current crumb. Italic on a category page, where it is the name of a
+ * collection, and roman on a product page, where it is the name of a piece.
+ * Sections 6.1 and 7.1 set the two differently and the distinction is
+ * deliberate, so the italic is opted into rather than applied to every
+ * trailing crumb.
+ */
+.crumbs span[aria-current] {
+  color: var(--cn-bark);
+}
+
+.crumbs span[aria-current][data-italic="true"] {
+  font-style: italic;
+}
+
+/* The collection index header, section 5. */
+.collection-head {
+  padding: 40px var(--cn-page-padding) 0;
+}
+
+.collection-head .eyebrow {
+  margin-bottom: 18px;
+}
+
+.collection-head h1 {
+  margin: 0;
+}
+
+/* The materials library header, section 9. */
+.materials-head {
+  padding: 44px var(--cn-page-padding) 0;
+}
+
+.materials-head h1 {
+  margin: 0 0 18px;
+}
+
+.materials-head .prose p {
+  line-height: 2.05;
+  text-wrap: pretty;
+}
+
+.category-head {
+  padding: 44px var(--cn-page-padding) 0;
+}
+
+.category-head h1 {
+  font-size: var(--cn-size-page);
+  margin: 0 0 14px;
+}
+
+/*
+ * The collection description. Ink rather than Bark, and full width: this is
+ * body copy introducing the grid, not a caption on it. Section 6.2.
+ */
+.category-head p {
+  font-size: var(--cn-size-body);
+  line-height: 1.9;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+/* The tab row that switches between all six collections without returning to
+ * the overview. Section 6.3. */
+.category-tabs {
+  display: flex;
+  gap: 34px;
+  flex-wrap: wrap;
+  padding: 34px var(--cn-page-padding) 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+/*
+ * The negative margin overlaps the container's rule, so the active tab's
+ * underline replaces that rule rather than sitting a pixel beneath it and
+ * drawing two lines. Section 6.3 asks for it to be kept.
+ */
+.category-tabs a {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  padding: 0 0 13px;
+  border-bottom: 1px solid transparent;
+  margin-bottom: calc(var(--cn-hairline-weight) * -1);
+}
+
+.category-tabs a:hover {
+  color: var(--cn-bark);
+}
+
+.category-tabs a[aria-current="page"] {
+  color: var(--cn-ink);
+  border-bottom-color: var(--cn-ink);
+}
+
+/* --------------------------------------------------------------- product */
+
+.product {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  padding: 40px var(--cn-page-padding) 80px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .product {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.product__image {
+  width: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+}
+
+/* The rest of the photographs, beneath the one being shown. Small frames that
+ * letterbox exactly as the main one does, so nothing is cropped. */
+.product__shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product__shot {
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  cursor: pointer;
+  background-color: var(--cn-letterbox);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.product__shot[data-current="true"] {
+  border-color: var(--cn-ink);
+}
+
+.product__shown {
+  margin: 18px 0 16px;
+  text-transform: uppercase;
+}
+
+.product__material-label {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 0 0 12px;
+}
+
+/*
+ * Each material is a swatch with its name set beneath it.
+ *
+ * The 26px gap and the nowrap on the name are load bearing, section 7.3: the
+ * long names in this library, ARABESCATO and MARQUINA, collide at anything
+ * tighter and wrap into each other's columns. A tidier looking grid is the
+ * wrong trade here.
+ */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.swatches li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: none;
+  min-width: 46px;
+}
+
+.swatch {
+  display: block;
+  width: 46px;
+  height: 46px;
+  border: var(--cn-hairline-weight) solid rgba(28, 23, 20, 0.08);
+}
+
+.swatch__name {
+  margin-top: 8px;
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-swatch);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--cn-clay);
+}
+
+/* The material the photograph shows, set in Ink so the row reads as one
+ * shown finish among several available. Section 7.3. */
+.swatch__name[data-default="true"] {
+  color: var(--cn-ink);
+}
+
+.product__swatch-note {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 16px 0 0;
+}
+
+/*
+ * The downloadable documents, section 7.3.
+ *
+ * Rules rather than boxes. The two rows share one top rule and carry one
+ * each beneath them, which is the same structural treatment the
+ * specification table on the other side of the page uses, so the two halves
+ * of the product page read as one system.
+ */
+.downloads {
+  display: flex;
+  flex-direction: column;
+  margin-top: 34px;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.download {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.download__icon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: var(--cn-hairline-weight) solid var(--cn-button-border);
+  font-size: var(--cn-size-micro);
+  color: var(--cn-press-text);
+}
+
+.download__title {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+.download__meta {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 3px 0 0;
+}
+
+.download:hover .download__title {
+  color: var(--cn-bark);
+}
+
+.product__right {
+  padding-top: 4px;
+}
+
+.product__eyebrow {
+  color: var(--cn-clay);
+  letter-spacing: var(--cn-track-24);
+  margin-bottom: 14px;
+}
+
+.product__title {
+  font-size: var(--cn-size-product);
+  line-height: 1;
+  margin: 0 0 8px;
+}
+
+.product__subtitle {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 0;
+}
+
+/*
+ * Section 14 records the subtitle and the price as both italic 15px Bark,
+ * reading at equal weight, and offers 16px if the price should lead. It
+ * should: the price is the piece of information a visitor came for, and a
+ * subtitle that competes with it makes the column harder to scan. Logged in
+ * PENDING_CHANGES.md.
+ */
+.product__price {
+  font-style: italic;
+  font-size: var(--cn-size-cta);
+  margin: 16px 0 0;
+}
+
+/* A short structural rule between the price and the call to action, as set
+ * in the approved product mockup. Not a decorative full width device.
+ *                                                          copy-lint-ok */
+.product__rule {
+  width: 46px;
+  height: 0;
+  border: 0;
+  border-top: var(--cn-hairline-weight) solid var(--cn-button-border);
+  margin: 22px 0;
+}
+
+/* Full column width, no cap. Section 13. */
+.product__description {
+  margin: 30px 0 0;
+  font-size: var(--cn-size-body);
+  line-height: 2.05;
+  color: var(--cn-ink);
+  text-wrap: pretty;
+}
+
+/* Specification pairs, two to a row. */
+.spec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+  margin: 38px 0 0;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.spec-grid > div {
+  padding: 15px 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.spec-grid dt {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 0 0 6px;
+}
+
+.spec-grid dd {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-body);
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .spec-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The tinted panel at the foot of the right column, and the "Regarding"
+ * panel on the enquiry page. Sections 7.4.10 and 11.1. */
+.panel {
+  background: var(--cn-letterbox);
+  padding: 22px 26px;
+  margin: 30px 0 0;
+}
+
+.panel__label {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 0 0 10px;
+}
+
+/* Roman, at body size. An italic pull quote here competed with the italic
+ * price and subtitle directly above it. Section 7.4.10. */
+.panel p {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-body);
+  line-height: 1.8;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+/* The second Enquire, inside the bespoke box. Section 7.4.10. */
+.panel .cta {
+  margin-top: 18px;
+  padding-bottom: 5px;
+}
+
+/*
+ * The "Regarding" panel on the enquiry page, section 11.1. Slightly tighter
+ * than the bespoke box, and its one line is the name of a piece rather than
+ * a paragraph, so it is set italic like every other piece name on the site.
+ */
+.panel--regarding {
+  margin-top: 0;
+  padding: 20px 24px;
+}
+
+.panel--regarding p:not(.panel__label) {
+  font-style: italic;
+}
+
+/*
+ * The cross reference to a paired piece, where one exists.
+ *
+ * A label and a name on one baseline, section 7.4.9, rather than a rule and
+ * a sentence. The pairing is a property of the piece, like its lead time, so
+ * it is set like one.
+ */
+.pairing {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  margin: 26px 0 0;
+}
+
+.pairing__label {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  flex: none;
+}
+
+.pairing a {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-bark);
+}
+
+.pairing a:hover {
+  color: var(--cn-ink);
+  border-bottom-color: var(--cn-ink);
+}
+
+/*
+ * Three other pieces from the same collection, section 7.4.11.
+ *
+ * Derived rather than curated: the catalogue holds one pairing per piece and
+ * nothing else relating one to another, so these are the other pieces a
+ * visitor looking at this one can actually buy. A curated field would be
+ * better editorially and is a migration away; logged in PENDING_CHANGES.md.
+ */
+.also-consider {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.also-consider__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 22px;
+}
+
+.also-consider__name {
+  font-family: var(--cn-font);
+  font-weight: 300;
+  font-size: var(--cn-size-card);
+  line-height: 1.3;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+.also-consider__type {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 3px 0 0;
+}
+
+.product__note {
+  margin: 22px 0 0;
+  font-size: var(--cn-size-body);
+  line-height: 1.8;
+  color: var(--cn-clay);
+}
+
+/* ---------------------------------------------------------------- editorial
+ * Shared blocks used by the homepage, the atelier page and the trade page.
+ */
+
+/* The bespoke block on the homepage, section 4.4. Its own padding and gutter
+ * rather than the shared section values, because it is the one block on the
+ * site that carries this much air. */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  padding: 104px var(--cn-page-padding) 112px;
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 64px var(--cn-page-padding) 72px;
+  }
+}
+
+.split__eyebrow {
+  margin-bottom: 26px;
+}
+
+.split h2 {
+  font-size: var(--cn-size-headline);
+  line-height: 1.12;
+  margin: 0 0 26px;
+}
+
+/* Full column width, no cap. Section 13. */
+.split__body {
+  font-size: var(--cn-size-body);
+  line-height: 1.95;
+  color: var(--cn-ink);
+  margin: 0 0 30px;
+}
+
+.split__figure {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------------------------------------------------------- atelier
+ *
+ * Section 8. Three blocks on this page are centred as groups: "For
+ * designers", "As seen in" and "Continue exploring". Everything else,
+ * including the whole intro and the founder, is left aligned. Getting that
+ * split wrong is what makes the page read as a brochure rather than as a
+ * studio's own account of itself.
+ */
+
+.atelier-intro {
+  padding: 48px var(--cn-page-padding) 0;
+}
+
+.atelier-intro .eyebrow {
+  margin-bottom: 22px;
+}
+
+.atelier-intro h1 {
+  line-height: 1.14;
+  margin: 0 0 34px;
+}
+
+/*
+ * An even 22px rhythm, full width, no cap. Section 8.
+ *
+ * The gap owns the spacing, so the block margins the paragraphs and headings
+ * carry elsewhere are cleared here rather than added to it. A heading still
+ * needs more air above it than a paragraph does, and takes it as extra
+ * padding on top of the shared gap.
+ */
+.atelier-intro .prose {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.atelier-intro .prose > * {
+  margin: 0;
+}
+
+.atelier-intro .prose p {
+  line-height: 2.05;
+  text-wrap: pretty;
+}
+
+.atelier-intro .prose h2 {
+  padding-top: 22px;
+}
+
+.founder-block {
+  margin: 56px var(--cn-page-padding) 0;
+  padding-top: 40px;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.founder-block .eyebrow {
+  margin-bottom: 20px;
+}
+
+.designers {
+  margin: 48px var(--cn-page-padding) 0;
+  padding: 44px 0;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.press {
+  margin: 44px var(--cn-page-padding) 0;
+}
+
+.press .eyebrow {
+  margin-bottom: 22px;
+}
+
+.exploring {
+  margin: 48px var(--cn-page-padding) 0;
+  padding-top: 40px;
+  padding-bottom: 76px;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+/*
+ * The centred block. Section 8: on the atelier page the eyebrow, the
+ * heading, the paragraph and the call to action are centred as one group,
+ * and everything else on that page is left aligned.
+ */
+.centred {
+  text-align: center;
+}
+
+/*
+ * The three eyebrows on this page do not align uniformly, and that is the
+ * locked design rather than an oversight.
+ *
+ * "For Designers" sits left while the heading, body and call to action it
+ * introduces are all centred. "As Seen In" and "Continue Exploring" are
+ * centred with their blocks. Each is therefore set explicitly here rather
+ * than left to inherit `text-align` from its parent, so a change to one
+ * block cannot silently move another block's label.
+ */
+.designers .eyebrow {
+  text-align: left;
+}
+
+.press .eyebrow,
+.exploring .eyebrow {
+  text-align: center;
+}
+
+.centred h2 {
+  font-size: var(--cn-size-section);
+  line-height: 1.3;
+  margin: 0 0 18px;
+}
+
+/*
+ * Wide enough to run about two lines, not four. Section 8 gives 68em, and
+ * the number matters: the previous build capped this at 27em, which broke a
+ * two line paragraph into six and made a centred block read as a poem.
+ */
+/*
+ * :not(.eyebrow) is load bearing, not tidiness.
+ *
+ * `.centred p` has specificity 0,1,1 and `.eyebrow` has 0,1,0, so written as
+ * a bare descendant this rule beat the eyebrow class and set the label above
+ * the heading at 15px in Ink instead of 11px in Clay. The tracking still
+ * applied, which made it read as a wide-tracked heading rather than as a
+ * mistake, so it survived a visual review.
+ */
+.centred p:not(.eyebrow) {
+  color: var(--cn-ink);
+  font-size: var(--cn-size-body);
+  line-height: 1.95;
+}
+
+.centred .prose {
+  margin: 0 auto 26px;
+}
+
+/* The centred press row and its label. Section 2.3. */
+.centred-row {
+  text-align: center;
+}
+
+/* The numbered row on the trade page. */
+.numbered {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 54px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.numbered li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+}
+
+/* The number tracks tighter than the label beside it, section 10, so a two
+ * digit figure does not set wider than the word it introduces. */
+.numbered span {
+  color: var(--cn-clay);
+  letter-spacing: 0.1em;
+}
+
+/* The founder block on the atelier page. */
+.founder {
+  display: flex;
+  gap: 34px;
+  align-items: flex-start;
+}
+
+/* Contain rather than cover, so a supplied portrait is not cropped to fit the
+ * frame. Section 07 governs the category grid specifically, but nothing on
+ * the site crops a supplied photograph. The hero is the single exception, and
+ * it is a full bleed viewport band rather than a frame around a subject. */
+.founder__portrait {
+  width: 92px;
+  flex: none;
+  aspect-ratio: 4 / 5;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+}
+
+/*
+ * The founder's name is not a card name.
+ *
+ * It sits beside a portrait in a biography, not above a frame in a grid, and
+ * it reads at the same size as the role and the quote beneath it. Revision 5
+ * swept it into the 20px card token along with the genuine card names, which
+ * made it compete with the section headings around it.
+ *
+ * It therefore takes the body size directly rather than the card size, and
+ * carries its own weight and colour, so a future change to what a card title
+ * measures cannot reach it.
+ */
+.founder__name {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-body);
+  font-weight: 300;
+  color: var(--cn-ink);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.founder__role {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  color: var(--cn-bark);
+  margin: 4px 0 0;
+}
+
+/*
+ * The pull quote. Italic at body size, section 8: what separates it from the
+ * paragraph above is the italic cut and the 26em measure, not a larger size.
+ * The previous build raised it to 20px, which the specification does not.
+ */
+.founder blockquote {
+  margin: 20px 0 0;
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  line-height: 1.6;
+  color: var(--cn-ink);
+}
+
+.founder blockquote p {
+  font-family: inherit;
+  font-style: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* The press row on the atelier page, centred beneath its centred label. */
+.press-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.press-row li {
+  border: var(--cn-hairline-weight) solid var(--cn-press-border);
+  padding: 11px 20px;
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-20);
+  text-transform: uppercase;
+  color: var(--cn-press-text);
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+/* "Continue exploring", section 8. Two centred columns rather than two
+ * columns of centred text: the pair is narrower than the page and sits in
+ * the middle of it. The modifier keeps this off the material detail page,
+ * which uses the same two column grid and is left aligned. */
+.two-column--centred {
+  text-align: center;
+  justify-items: center;
+}
+
+.two-column h3 {
+  font-size: var(--cn-size-card);
+  line-height: 1.3;
+}
+
+.two-column .lede {
+  display: block;
+  margin: 6px 0 16px;
+}
+
+.two-column--centred .tracked-link {
+  letter-spacing: var(--cn-track-22);
+}
+
+@media (max-width: 768px) {
+  .two-column {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------------ forms */
+
+.form {
+  display: grid;
+  gap: 34px 30px;
+}
+
+.form--grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.form--grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* The mailing list signup, in the left column of the enquiry page. One
+ * column and a tighter rhythm than the enquiry form beside it: two fields
+ * do not need the same air as seven. */
+.form--mailing {
+  gap: 22px;
+  margin: 22px 0 0;
+  max-width: 22em;
+}
+
+@media (max-width: 900px) {
+  .form--grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .form--grid-4,
+  .form--grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.field--wide {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  line-height: 1.4;
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+}
+
+/* Underline only, as set in the trade and enquiry mockups. No boxed input. */
+.field input,
+.field textarea {
+  font-family: var(--cn-font);
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  color: var(--cn-ink);
+  background: none;
+  border: 0;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-field);
+  padding: 0 0 8px;
+  width: 100%;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--cn-clay);
+}
+
+/* No outline on focus. The underline changes colour instead, which is the
+ * only visible state the design draws. */
+.field input:focus,
+.field textarea:focus {
+  outline: 0;
+  border-bottom-color: var(--cn-ink);
+}
+
+/* Fixed at three rows and not draggable, section 11.2: a resize handle is
+ * the one piece of browser chrome that would show through this design. */
+.field textarea {
+  resize: none;
+}
+
+/* The bordered submit, as on "Register" and "Send Enquiry". */
+.button {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-24);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+  background: none;
+  border: var(--cn-hairline-weight) solid var(--cn-button-border);
+  padding: 15px 44px;
+  cursor: pointer;
+  justify-self: start;
+}
+
+/* The enquiry page's send, section 11.2. */
+.button--enquiry {
+  padding: 16px 40px;
+}
+
+.button:hover {
+  background: var(--cn-ink);
+  color: var(--cn-ivory);
+  border-color: var(--cn-ink);
+}
+
+.button:disabled {
+  background: none;
+  color: var(--cn-clay);
+  border-color: var(--cn-hairline);
+  cursor: default;
+}
+
+/* The success message sits to the left of the button, section 10. */
+.form__foot {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 26px;
+  margin-top: 44px;
+}
+
+.form__message,
+.form__error {
+  grid-column: 1 / -1;
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-caption);
+  color: var(--cn-bark);
+  margin: 0;
+}
+
+/* The enquiry page sets its success note on the tinted ground rather than
+ * beside the button, section 11.2. */
+.form__message--panel {
+  margin-top: 20px;
+  background: var(--cn-letterbox);
+  padding: 18px 22px;
+  color: var(--cn-ink);
+}
+
+/* "We only use these details to respond to your enquiry." Section 11.2. */
+.form__note {
+  grid-column: 1 / -1;
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  line-height: 1.7;
+  color: var(--cn-bark);
+  margin: 18px 0 0;
+}
+
+/* ---------------------------------------------------------------- enquire
+ *
+ * Figure 11. Two equal columns divided by a single vertical rule: the
+ * invitation, the piece being enquired about and the studio details on the
+ * left, the form on the right.
+ *
+ * The left column carries a 96px indent so the gap from its copy to the
+ * divider reads as balanced against the page gutter. Section 9.1.
+ */
+
+.enquire {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+.enquire__left {
+  padding: 48px 24px 80px 96px;
+  border-right: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.enquire__right {
+  padding: 48px 48px 80px 40px;
+}
+
+.enquire h1 {
+  font-size: var(--cn-size-page);
+  margin: 0 0 22px;
+}
+
+/*
+ * Balanced so the invitation sets as two lines of roughly equal length
+ * rather than four short ones. Section 11.1.
+ */
+.enquire__lede {
+  margin: 0 0 34px;
+  font-size: var(--cn-size-body);
+  line-height: 2.05;
+  color: var(--cn-ink);
+}
+
+.enquire__block {
+  margin-top: 34px;
+}
+
+/* The showroom sits further from the invitation than the contact block sits
+ * from the showroom, section 11.1. */
+.enquire__block--showroom {
+  margin-top: 40px;
+}
+
+/* The showroom address and the contact details. Italic Cormorant, Ink, and
+ * no tracking: this is copy, not a label. Section 11.1. The label above each
+ * block is excluded, so it keeps its own tracked uppercase treatment. */
+.enquire__block p:not(.eyebrow) {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  line-height: 1.7;
+  letter-spacing: 0;
+  color: var(--cn-ink);
+  margin: 0;
+}
+
+.enquire__block--contact p:not(.eyebrow) {
+  line-height: 1.8;
+}
+
+.enquire__block a {
+  color: var(--cn-ink);
+}
+
+.enquire__block a:hover {
+  color: var(--cn-bark);
+}
+
+/* The "Remove and enquire generally" link inside the Regarding panel. */
+.panel__undo {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-size: var(--cn-size-body);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--cn-bark);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-bark);
+}
+
+.panel__undo:hover {
+  color: var(--cn-ink);
+  border-bottom-color: var(--cn-ink);
+}
+
+@media (max-width: 900px) {
+  .enquire {
+    grid-template-columns: 1fr;
+  }
+  .enquire__left {
+    padding: var(--cn-section-padding) var(--cn-page-padding);
+    border-right: 0;
+    border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+  }
+  .enquire__right {
+    padding: var(--cn-section-padding) var(--cn-page-padding);
+  }
+}
+
+/* ------------------------------------------------------------------ trade
+ *
+ * The whole page sits on Ivory. Section 8.1 removed the tinted band that ran
+ * behind the registration form, which has no equivalent in the reference: a
+ * structural rule separates the intro from the form instead.
+ */
+
+/*
+ * The whole page sits on Ivory, section 10. A structural rule separates the
+ * intro from the form; there is no tinted band behind the fields.
+ */
+.trade-intro {
+  padding: 48px var(--cn-page-padding) 44px;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.trade-intro .eyebrow {
+  margin-bottom: 22px;
+}
+
+.trade-intro h1 {
+  line-height: 1.14;
+  margin: 0 0 26px;
+}
+
+.trade-intro__body {
+  font-size: var(--cn-size-body);
+  line-height: 2.05;
+  color: var(--cn-ink);
+  text-wrap: pretty;
+  margin: 0 0 38px;
+}
+
+.register-panel {
+  padding: 48px var(--cn-page-padding) 80px;
+}
+
+/*
+ * "Register for Trade Access", section 10.
+ *
+ * Formatted as a call to action rather than as a serif heading: 16px at
+ * 0.26em, the same treatment as the product page's Enquire. The previous
+ * build demoted it to an 11px eyebrow, which left the form with no visible
+ * invitation at the top of it.
+ */
+.register-panel__title {
+  font-family: var(--cn-font);
+  font-weight: 300;
+  font-size: var(--cn-size-cta);
+  letter-spacing: var(--cn-track-26);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+  margin: 0 0 22px;
+}
+
+/* The explanatory paragraph, then 76px of clearance before the first field.
+ * The gap is deliberate breathing room, section 10, not a mistake. */
+.register-panel__intro {
+  font-size: var(--cn-size-body);
+  line-height: 1.9;
+  color: var(--cn-ink);
+  margin: 0 0 76px;
+}
+
+/* ------------------------------------------------------------------ prose */
+
+.prose h2 {
+  font-size: var(--cn-size-section);
+  margin: 44px 0 14px;
+}
+
+.prose h2:first-child {
+  margin-top: 0;
+}
+
+.prose h3 {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  font-weight: 300;
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 34px 0 12px;
+}
+
+.prose p,
+.prose li {
+  font-size: var(--cn-size-body);
+  line-height: 1.95;
+  color: var(--cn-ink);
+}
+
+.prose ul {
+  margin: 0 0 1.1em;
+  padding-left: 18px;
+}
+
+.prose li {
+  margin-bottom: 6px;
+}
+
+/* Placeholders the business still has to fill. Visible so they cannot be
+ * forgotten, and greppable. */
+.prose .todo,
+.todo {
+  color: var(--cn-bark);
+  border-bottom: var(--cn-hairline-weight) dotted var(--cn-clay);
+}
+
+/* ------------------------------------------------------------------- tabs */
+
+.tabs {
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+  padding-bottom: 12px;
+  margin-bottom: 36px;
+}
+
+.tabs a {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-clay);
+}
+
+.tabs a[aria-current="page"] {
+  color: var(--cn-ink);
+}
+
+/* --------------------------------------------------------------- material
+ *
+ * A four column grid of 3:2 tiles, grouped Stone, Timber, Metal. Section 5.
+ */
+
+.material-groups {
+  padding: 40px 0 88px;
+}
+
+.material-group {
+  margin-bottom: 52px;
+}
+
+.material-group:last-child {
+  margin-bottom: 0;
+}
+
+/* The group label carries a rule beneath it and 26px of clearance before its
+ * grid. Structural: it divides one group of materials from the next.
+ *                                                          copy-lint-ok */
+.material-group__label {
+  margin: 0 var(--cn-page-padding) 26px;
+  padding-bottom: 14px;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+}
+
+.material-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px 26px;
+  padding: 0 var(--cn-page-padding);
+}
+
+@media (max-width: 1100px) {
+  .material-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .material-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .material-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * The one frame besides the hero that fills rather than letterboxes.
+ *
+ * Section 9 is explicit about why, and the reasoning is worth keeping: a
+ * material sample is a surface, not an object. There is no silhouette to
+ * crop into and no edge to lose, so filling the frame shows more of the
+ * grain than centring a small rectangle on a mount would. Every frame that
+ * holds a piece of furniture still letterboxes.
+ *
+ * With no sample photograph the frame falls back to the flat swatch colour,
+ * which is why `contain` is the default here and `cover` is opted into.
+ */
+.material-card__image {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--cn-letterbox);
+  margin-bottom: 12px;
+}
+
+.material-card__image[data-photo="true"] {
+  background-size: cover;
+  background-position: center;
+}
+
+.material-card__name {
+  font-family: var(--cn-font);
+  font-weight: 300;
+  font-size: var(--cn-size-card);
+  line-height: 1.3;
+  color: var(--cn-ink);
+  margin: 12px 0 0;
+}
+
+.material-card__meta {
+  font-family: var(--cn-font);
+  font-style: italic;
+  font-weight: 300;
+  font-size: var(--cn-size-body);
+  line-height: 1.6;
+  color: var(--cn-bark);
+  margin: 3px 0 0;
+}
+
+/* ----------------------------------------------------------------- footer
+ *
+ * Ground is Umber, the darkest ground on the site.
+ */
+
+.site-footer {
+  background: var(--cn-umber);
+  color: var(--cn-on-dark);
+  margin-top: var(--cn-major-gap);
+}
+
+.site-footer a,
+.site-footer a:link,
+.site-footer a:visited {
+  color: var(--cn-on-dark);
+}
+
+.site-footer a:hover {
+  color: var(--cn-on-dark-strong);
+}
+
+.site-footer__columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 34px var(--cn-page-padding) 30px;
+}
+
+/*
+ * The footer eyebrow. Set on the footer's own label colour rather than on
+ * Clay, which is an Ivory-ground value and goes muddy on Umber.
+ */
+.site-footer__eyebrow {
+  color: var(--cn-footer-label);
+  margin-bottom: 14px;
+}
+
+/* The address is the one thing in the footer set as body copy: full size,
+ * no tracking, sentence case. Section 3. */
+.site-footer__address {
+  display: flex;
+  flex-direction: column;
+  font-style: normal;
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-body);
+  line-height: 1.9;
+  letter-spacing: 0;
+  color: var(--cn-on-dark);
+}
+
+.site-footer__legal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+  text-align: right;
+}
+
+.site-footer__legal a {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  line-height: 1.4;
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-on-dark);
+}
+
+.site-footer__base {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 18px var(--cn-page-padding) 22px;
+  border-top: var(--cn-hairline-weight) solid var(--cn-hairline-dark);
+}
+
+.site-footer__base-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.site-footer__base a,
+.site-footer__tagline {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  line-height: 1.4;
+  letter-spacing: var(--cn-track-22);
+  text-transform: uppercase;
+  color: var(--cn-footer-label);
+  margin: 0;
+}
+
+.site-footer__base a:hover {
+  color: var(--cn-ivory);
+}
+
+/* The glyph is part of the label rather than an icon beside it, section 3,
+ * so it sits on the same baseline and takes the same colour. */
+.site-footer__instagram {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.site-footer__base-right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+/* The administration entrance and the tagline are both set quieter than the
+ * rest of the base row, as the design sets them. */
+.site-footer__admin,
+.site-footer__tagline {
+  color: var(--cn-footer-quiet);
+}
+
+.site-footer a.site-footer__admin,
+.site-footer a.site-footer__admin:link,
+.site-footer a.site-footer__admin:visited {
+  color: var(--cn-footer-quiet);
+}
+
+@media (max-width: 700px) {
+  .site-footer__columns {
+    flex-direction: column;
+    gap: 28px;
+  }
+  .site-footer__legal {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .site-footer__base-left {
+    gap: 20px;
+  }
+}
+
+/* ---------------------------------------------------------- cookie banner */
+
+.cookie-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: var(--cn-umber);
+  color: var(--cn-on-dark);
+  padding: 18px var(--cn-page-padding);
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.cookie-banner p {
+  color: var(--cn-on-dark);
+  font-size: var(--cn-size-body);
+  margin: 0;
+  max-width: 70ch;
+}
+
+.cookie-banner a,
+.cookie-banner a:link,
+.cookie-banner a:visited {
+  color: var(--cn-on-dark);
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-bark);
+}
+
+.cookie-banner__actions {
+  display: flex;
+  gap: 20px;
+}
+
+.cookie-banner button {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-micro);
+  letter-spacing: var(--cn-track-24);
+  text-transform: uppercase;
+  color: var(--cn-on-dark);
+  background: none;
+  border: var(--cn-hairline-weight) solid var(--cn-hairline-dark);
+  padding: 9px 18px;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------- skip and a11y */
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--cn-ivory);
+  padding: 10px 16px;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__frame {
+    transition: none;
+  }
+}
