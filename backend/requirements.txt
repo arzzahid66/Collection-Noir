@@ -1,0 +1,19 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+SQLAlchemy==2.0.36
+psycopg[binary]==3.2.3
+alembic==1.14.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+email-validator==2.2.0
+python-multipart==0.0.20
+Pillow==11.1.0
+# Specification sheet rendering, section 04. Pure Python with no system
+# libraries, unlike WeasyPrint, which needs GTK and does not install cleanly on
+# a plain Windows machine. See app/spec_sheets.py.
+reportlab==5.0.0
+# Test suite. See backend/tests/ and scripts/e2e.mjs.
+pytest==9.1.1
+httpx==0.28.1
+itsdangerous==2.2.0
+python-dotenv==1.0.1Q

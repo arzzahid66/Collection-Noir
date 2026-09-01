@@ -21,6 +21,14 @@ venv/
 .env.local
 .env.*.local
 
+# Server credentials. The SSH private key for the API host lives here. It was
+# untracked but not ignored, which is one `git add -A` away from being
+# published, so the directory is named explicitly rather than relying on
+# nobody staging it.
+server_cred/
+*.pem
+*.key
+
 # Editor / OS
 .vscode/
 .idea/
