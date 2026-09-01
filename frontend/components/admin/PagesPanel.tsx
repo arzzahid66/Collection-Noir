@@ -12,6 +12,7 @@ const GROUPS: { heading: string; prefix?: string; slugs?: string[] }[] = [
     heading: "Standing pages",
     slugs: [
       "atelier",
+      "atelier-bespoke",
       "materials-intro",
       "care",
       "trade",

@@ -11,6 +11,10 @@ import { useState } from "react";
  * a signup reads as a signup in the console rather than as a nameless
  * enquiry.
  *
+ * The submit is the word Join, set as text on the end of the field's rule.
+ * The later review asked for the boxed button to go: a bordered block under
+ * a single underlined field was the only enclosed control on the page.
+ *
  * A signup is written to the enquiries record rather than to a list of its
  * own, so the atelier reads it in the same place it reads everything else
  * that arrives from the site. The message names it as a mailing list request,
@@ -70,15 +74,29 @@ export function MailingListForm() {
 
   return (
     <form className="form form--mailing" onSubmit={onSubmit}>
+      {/* The submit sits on the end of the field's own underline rather than
+          in a box of its own below it, and reads as one word. The client's
+          review asked for text only, a step smaller, and level with the
+          input, so the rule is carried by the row and the input inside it
+          gives its border up. */}
       <div className="field">
         <label htmlFor="mailing-email">Email</label>
-        <input
-          id="mailing-email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-        />
+        <div className="field__line">
+          <input
+            id="mailing-email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+          />
+          <button
+            className="button--text"
+            type="submit"
+            disabled={state === "sending"}
+          >
+            {state === "sending" ? "Joining" : "Join"}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -86,16 +104,6 @@ export function MailingListForm() {
           {error}
         </p>
       )}
-
-      <div className="form__foot" style={{ justifyContent: "flex-start" }}>
-        <button
-          className="button button--enquiry"
-          type="submit"
-          disabled={state === "sending"}
-        >
-          {state === "sending" ? "Joining" : "Join the list"}
-        </button>
-      </div>
     </form>
   );
 }
