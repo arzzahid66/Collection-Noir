@@ -141,6 +141,16 @@ export const adminApi = {
 
   // --- enquiries ---
   enquiries: () => request<Enquiry[]>("/api/admin/enquiries"),
+
+  /*
+   * `handled` is a query parameter rather than a body, because the route
+   * declares it as a plain bool default and FastAPI reads a scalar of that
+   * shape from the query string.
+   */
+  markEnquiryHandled: (id: number, handled: boolean) =>
+    request<Enquiry>(`/api/admin/enquiries/${id}?handled=${handled}`, {
+      method: "PATCH",
+    }),
 };
 
 /**

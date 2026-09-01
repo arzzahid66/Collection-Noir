@@ -5,9 +5,11 @@ London Design. Italian Craft.
 Static-feeling marketing site for an atelier working in marble, solid timber
 and hand worked metal. Every piece is made to order.
 
-- **Frontend** Next.js 15, App Router, TypeScript, plain CSS
+- **Frontend** Next.js 16, App Router, TypeScript, plain CSS
 - **Backend** FastAPI, SQLAlchemy, Alembic
 - **Database** Neon Postgres
+- **Photography** Cloudflare R2, with Postgres as the fallback
+- **Enquiry mail** Resend, optional
 
 Catalogue data, photography and page copy live in the database and are edited
 through the admin console at `/admin`. Nothing is hardcoded in markup, so a
@@ -36,11 +38,25 @@ Copy `.env.example` to `backend/.env` and fill in:
 - `SESSION_SECRET`, generated with
   `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
 
+Optional, and everything works without them:
+
+- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and
+  `R2_PUBLIC_BASE_URL` put photography in Cloudflare R2 instead of in
+  Postgres. Leave them empty and the binaries stay in the database exactly as
+  before. See "Photography" below.
+- `RESEND_API_KEY`, `ENQUIRY_NOTIFY_TO` and `ENQUIRY_NOTIFY_FROM` email each
+  enquiry to the studio. Without the key an enquiry is still recorded and
+  visible in the console; nothing fails, and no mail is sent.
+
 Create the schema and seed the structure:
 
 ```bash
+alembic upgrade head
 python -m app.seed
 ```
+
+`alembic upgrade head` builds the schema from empty. Run it before the seed on
+a new database.
 
 This creates the six categories with their aspect ratios, the thirteen
 materials, the standing page copy, and the full launch catalogue from section 08.
@@ -140,6 +156,41 @@ framed differently, and the fix is a reshoot rather than anything in the code.
 Test the grid with real photography early. The gap between a mockup with
 placeholders and the same grid with actual product photography is where the
 problems appear.
+
+---
+
+## Photography
+
+Binaries live in Cloudflare R2. They used to live in Postgres as `bytea`, and
+they still can: the two are decided per row by `images.storage_key`, and both
+are read through the same URL contract, so the catalogue can be moved a
+photograph at a time with nothing breaking in between.
+
+The change was forced by the free tier. Neon allows 0.5 GB of storage and 5 GB
+of egress a month, which at a couple of megabytes a photograph is roughly two
+and a half thousand image views. R2 gives 10 GB and charges nothing for
+egress, and its free tier does not expire after a year the way S3's does.
+
+Set the five `R2_*` variables, then move what is already in the database:
+
+```bash
+python -m app.migrate_images --dry-run
+python -m app.migrate_images
+```
+
+Resumable and idempotent. It commits one row at a time and only looks at rows
+that still hold their bytes, so a re-run after any failure continues where it
+stopped. Each object is read back and size checked before the database copy is
+cleared, because that is the moment a photograph could otherwise be lost.
+
+With `R2_PUBLIC_BASE_URL` set, the API hands the browser the bucket URL and
+the photograph never touches the API host or Neon. Without it, `/api/images/
+{id}` redirects to the bucket instead. Either way the frontend is unchanged:
+it renders whatever `url` says, which is why this migration needed no
+component edits.
+
+R2 speaks the S3 API, so `R2_ENDPOINT` will point the same code at S3, MinIO
+or a local emulator.
 
 ---
 

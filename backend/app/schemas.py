@@ -288,12 +288,27 @@ class PageUpsert(BaseModel):
 
 
 class EnquiryCreate(BaseModel):
+    """A submission from one of the three public forms.
+
+    Every bound here matches the column it lands in, which was not previously
+    true: `phone`, `company` and `message` were unbounded while their columns
+    are String(60), String(200) and Text. On SQLite an over-long value is
+    silently truncated, so the gap never showed locally; on Postgres, which is
+    what production runs, it is a 500 on a form a client just filled in.
+
+    The route is public and unauthenticated, so the cap on `message` is also
+    the only thing bounding how much a single POST can write.
+    """
+
     type: EnquiryType = "general"
     name: str = Field(min_length=1, max_length=160)
     email: EmailStr
-    phone: str | None = None
-    company: str | None = None
-    message: str = Field(min_length=1)
+    phone: str | None = Field(default=None, max_length=60)
+    company: str | None = Field(default=None, max_length=200)
+    # Generous for a considered enquiry about a commission, and the trade form
+    # composes several labelled fields into this one. Still far short of what
+    # an unbounded field would let a script post.
+    message: str = Field(min_length=1, max_length=8000)
     product_id: int | None = None
 
 

@@ -51,6 +51,20 @@ def database() -> None:
     seed.main()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limit() -> None:
+    """Clear the enquiry rate limiter before every test.
+
+    The limiter is a module level singleton holding counts per address, and
+    every test client reports the same address. Without this, the sixth test
+    to post an enquiry fails with 429 because of what the previous five did,
+    which makes the suite order dependent and the failure baffling.
+    """
+    from app.ratelimit import enquiry_limiter
+
+    enquiry_limiter.reset()
+
+
 @pytest.fixture
 def db():
     session = SessionLocal()

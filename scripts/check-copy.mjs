@@ -126,6 +126,22 @@ const BANNED_COLOURS = [
   ["#ffffff", "pure white"],
 ];
 
+/**
+ * Tool generated files. Not copy, and not fixable.
+ *
+ * `frontend/AGENTS.md` is written and re-added by `next dev` on every run, as
+ * the file itself says, and `frontend/CLAUDE.md` only includes it. Editing the
+ * punctuation out of them lasts until the next `npm run dev`, so a lint that
+ * reported them would report two permanent failures that no one can clear.
+ * Neither renders to a visitor.
+ */
+const GENERATED = new Set(
+  [
+    ["frontend", "AGENTS.md"],
+    ["frontend", "CLAUDE.md"],
+  ].map((parts) => join(root, ...parts)),
+);
+
 const problems = [];
 
 function walk(dir) {
@@ -141,7 +157,7 @@ function walk(dir) {
 }
 
 function inspect(file) {
-  if (SELF_CHECKING.has(file)) return;
+  if (SELF_CHECKING.has(file) || GENERATED.has(file)) return;
   const rel = relative(root, file).split(sep).join("/");
   const isStylesheet = extname(file) === ".css";
   const lines = readFileSync(file, "utf8").split(/\r?\n/);

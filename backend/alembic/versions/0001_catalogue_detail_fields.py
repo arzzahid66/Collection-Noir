@@ -7,7 +7,7 @@ Every column is nullable or carries a server default, so this applies to a
 populated database without touching existing rows.
 
 Revision ID: 0001_catalogue_detail
-Revises:
+Revises: 0000_initial
 Create Date: 2026-08-02
 """
 
@@ -17,7 +17,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0001_catalogue_detail"
-down_revision: str | None = None
+down_revision: str | None = "0000_initial"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

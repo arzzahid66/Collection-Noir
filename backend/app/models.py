@@ -210,14 +210,26 @@ class ProductMaterial(Base):
 
 
 class Image(Base):
-    """Image binaries live in Postgres.
+    """Photograph metadata, with the binary either in a bucket or in Postgres.
 
-    Neon is Postgres only with no object-storage service, and keeping the
-    binaries here means the whole system runs on one credential. At catalogue
-    scale (roughly forty photographs) this sits well inside Neon's storage
-    allowance. If the catalogue grows past a few hundred images, this table is
-    replaced by object-storage keys without any frontend change, because the
-    public contract is the `/api/images/{id}` URL either way.
+    The binaries used to live here as `bytea`, on the reasoning that Neon is
+    Postgres only and one credential is simpler than two. The free tier ended
+    that: 0.5 GB of storage and 5 GB of egress a month is roughly two and a
+    half thousand image views, which a marketing site reaches quickly.
+
+    So there are now two places a binary can be, and exactly one column says
+    which:
+
+    - `storage_key` set  ->  the bytes are in the bucket, `data` is NULL.
+    - `storage_key` NULL ->  the bytes are in `data`, as before.
+
+    Both are read through the same public contract, `/api/images/{id}`, which
+    is what the earlier note here promised would make this migration invisible
+    to the frontend. It was right, and it is: no component changed.
+
+    Rows uploaded before the bucket existed keep working untouched, so the
+    migration is a background job rather than a cutover. See app/storage.py
+    and app/migrate_images.py.
 
     Images are stored exactly as supplied. Nothing here crops, resizes or
     re-encodes them.
@@ -241,8 +253,15 @@ class Image(Base):
     # Deferring it means the column is fetched only where it is actually
     # read, which is the one route that serves the binary. That route has the
     # session open when it touches `data`, so the extra SELECT is fine.
-    data: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
+    data: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True, nullable=True)
     byte_size: Mapped[int] = mapped_column(Integer, default=0)
+
+    # The object key in the bucket, e.g. "images/9f2c....jpg". NULL means the
+    # binary is still in `data`. Not deferred: it is small, and every
+    # serialisation of an image needs it to build the URL, so deferring it
+    # would reintroduce exactly the per-row extra SELECT that deferring `data`
+    # was meant to avoid.
+    storage_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Natural dimensions, recorded at upload. The admin console compares these
     # against the target category ratio so off-ratio photography is visible

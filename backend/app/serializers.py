@@ -7,6 +7,34 @@ is being rendered on the public site or inside the admin console.
 from __future__ import annotations
 
 from . import models, schemas
+from .config import get_settings
+
+
+def image_url(image: models.Image) -> str:
+    """The URL the frontend renders a photograph from.
+
+    This one function is the entire frontend facing surface of the move to
+    object storage, which is what the note on `models.Image` promised: the
+    contract was always "whatever `url` says", so changing what it says
+    required no component change at all.
+
+    Two shapes come out of it:
+
+    - The bucket's public URL, when the binary is in the bucket and a public
+      base is configured. The bytes then go straight from Cloudflare to the
+      browser, touching neither the API host nor Neon, which is the point of
+      the exercise.
+    - `/api/images/{id}` otherwise, exactly as before. That covers rows whose
+      binary is still in Postgres, and it covers a bucket that has no public
+      hostname yet, where the API redirects instead.
+
+    Because the fallback is always valid, a half migrated catalogue renders
+    correctly: each photograph is served from wherever it currently is.
+    """
+    settings = get_settings()
+    if image.storage_key and settings.r2_public_base_url:
+        return f"{settings.r2_public_base_url.rstrip('/')}/{image.storage_key}"
+    return f"/api/images/{image.id}"
 
 
 def image_out(image: models.Image | None) -> schemas.ImageOut | None:
@@ -20,7 +48,7 @@ def image_out(image: models.Image | None) -> schemas.ImageOut | None:
         height=image.height,
         byte_size=image.byte_size,
         alt_text=image.alt_text,
-        url=f"/api/images/{image.id}",
+        url=image_url(image),
     )
 
 

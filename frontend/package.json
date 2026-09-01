@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "check:copy": "node ../scripts/check-copy.mjs",
     "test:e2e": "node --test ../scripts/e2e.mjs"

@@ -329,6 +329,40 @@
   color: var(--cn-clay);
 }
 
+/*
+ * An answered enquiry stays in the list rather than disappearing from it. The
+ * inbox is the record of what came in, and hiding a row would make the count
+ * of enquiries depend on which ones had been ticked.
+ *
+ * So it recedes instead: the whole row drops to the muted weight the console
+ * uses for secondary detail, and returns to full strength on hover so it can
+ * still be read.
+ */
+.admin-table tr[data-handled="true"] td {
+  color: var(--cn-clay);
+}
+
+.admin-table tr[data-handled="true"]:hover td {
+  color: inherit;
+}
+
+.enquiry-handled {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.enquiry-handled input {
+  /* The console draws its own controls at 12px; the browser default checkbox
+     is 13px and sits a pixel proud of the baseline in this row. */
+  margin: 0;
+  width: 12px;
+  height: 12px;
+  accent-color: var(--cn-ink);
+  cursor: pointer;
+}
+
 /* --- sign in ----------------------------------------------------------- */
 
 .admin-login {

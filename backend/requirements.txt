@@ -8,12 +8,20 @@ pydantic-settings==2.7.0
 email-validator==2.2.0
 python-multipart==0.0.20
 Pillow==11.1.0
+itsdangerous==2.2.0
+python-dotenv==1.0.1
 # Specification sheet rendering, section 04. Pure Python with no system
 # libraries, unlike WeasyPrint, which needs GTK and does not install cleanly on
 # a plain Windows machine. See app/spec_sheets.py.
 reportlab==5.0.0
+# Object storage for photography. Cloudflare R2 speaks the S3 API, so the
+# standard AWS client works against it unchanged. See app/storage.py.
+boto3==1.35.99
+# Runtime, not just tests: the enquiry notification posts to the mail provider
+# with it. See app/notify.py.
+httpx==0.28.1
 # Test suite. See backend/tests/ and scripts/e2e.mjs.
 pytest==9.1.1
-httpx==0.28.1
-itsdangerous==2.2.0
-python-dotenv==1.0.1Q
+# In-process S3 so the object storage path is covered by real boto3
+# calls rather than by a stub. See tests/test_storage.py.
+moto[s3]==5.0.28

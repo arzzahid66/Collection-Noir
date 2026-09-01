@@ -37,6 +37,29 @@ export function EnquiriesPanel({ onUnauthorised }: PanelProps) {
     void load();
   }, [load]);
 
+  /*
+   * `handled` has existed on the model, in EnquiryOut and on the PATCH route
+   * since the console was built, but nothing surfaced it, so an inbox of
+   * enquiries offered no way to record that one had been answered. With no
+   * such mark, the only way to work the list is to remember it.
+   *
+   * The row is updated from the response rather than reloaded, so the table
+   * does not reorder under the cursor mid-click.
+   */
+  const setHandled = useCallback(
+    async (enquiry: Enquiry, handled: boolean) => {
+      try {
+        const updated = await adminApi.markEnquiryHandled(enquiry.id, handled);
+        setEnquiries((current) =>
+          current.map((row) => (row.id === updated.id ? updated : row)),
+        );
+      } catch (error) {
+        report(error);
+      }
+    },
+    [report],
+  );
+
   return (
     <>
       <p className="admin-note">
@@ -60,11 +83,12 @@ export function EnquiriesPanel({ onUnauthorised }: PanelProps) {
               <th>Type</th>
               <th>From</th>
               <th>Enquiry</th>
+              <th>Handled</th>
             </tr>
           </thead>
           <tbody>
             {enquiries.map((enquiry) => (
-              <tr key={enquiry.id}>
+              <tr key={enquiry.id} data-handled={enquiry.handled ? "true" : "false"}>
                 <td style={{ whiteSpace: "nowrap" }}>{received(enquiry.created_at)}</td>
                 <td>{enquiry.type}</td>
                 <td>
@@ -85,6 +109,18 @@ export function EnquiriesPanel({ onUnauthorised }: PanelProps) {
                   )}
                 </td>
                 <td style={{ whiteSpace: "pre-wrap" }}>{enquiry.message}</td>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <label className="enquiry-handled">
+                    <input
+                      type="checkbox"
+                      checked={enquiry.handled}
+                      onChange={(event) => void setHandled(enquiry, event.target.checked)}
+                    />
+                    <span className="image-tile__meta">
+                      {enquiry.handled ? "Answered" : "Mark answered"}
+                    </span>
+                  </label>
+                </td>
               </tr>
             ))}
           </tbody>
