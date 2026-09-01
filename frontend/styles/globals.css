@@ -1971,6 +1971,36 @@ b {
   grid-column: 1 / -1;
 }
 
+/* A field whose submit shares the field's own rule, section 10.
+ *
+ * The row carries the underline and the input inside it gives its border up,
+ * so the word on the end sits on the same line as the field rather than under
+ * it. Baseline alignment rather than centre: the two are different sizes, and
+ * it is the type that has to line up, not the boxes.
+ */
+.field__line {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-field);
+}
+
+/* Specific enough to beat `.field input`, which sets the underline every
+ * other field on the site draws for itself. Here the row draws it, so the
+ * input must give its own up or the two sit a pixel apart and read as a
+ * broken rule. */
+.field .field__line input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+/* The rule answers focus, as the plain field's underline does, rather than
+ * the input drawing a second one inside it. */
+.field__line:focus-within {
+  border-bottom-color: var(--cn-ink);
+}
+
 .field label {
   font-family: var(--cn-font);
   font-size: var(--cn-size-micro);
@@ -2030,6 +2060,33 @@ b {
 /* The enquiry page's send, section 11.2. */
 .button--enquiry {
   padding: 16px 40px;
+}
+
+/* Text only submit, for a control that sits inside a field rather than
+ * beneath one. No border, no ground and no padding to hold, and a step
+ * smaller than the bordered buttons so the field's own copy stays the larger
+ * of the two. Tracked at 0.2em rather than 0.24em: a single short word
+ * sprawls at the wider setting. */
+.button--text {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-swatch);
+  letter-spacing: var(--cn-track-20);
+  text-transform: uppercase;
+  color: var(--cn-ink);
+  background: none;
+  border: 0;
+  padding: 0 0 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button--text:hover {
+  color: var(--cn-bark);
+}
+
+.button--text:disabled {
+  color: var(--cn-clay);
+  cursor: default;
 }
 
 .button:hover {
