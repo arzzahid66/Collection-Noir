@@ -86,6 +86,14 @@
   --cn-font: var(--font-cormorant), "Cormorant Garamond", Georgia,
     "Times New Roman", serif;
 
+  /* The single exception, and it is scoped to one block: the Join signup's
+   * invitation, field placeholder and submit, which the client's approved
+   * design sets in a geometric sans beneath an italic Cormorant heading.
+   * Nothing else on the site may name this token. Jost is the loaded cut;
+   * the rest of the stack is what a machine already has if it fails. */
+  --cn-font-sans: var(--font-jost), "Jost", "Futura", "Avenir Next",
+    "Century Gothic", system-ui, sans-serif;
+
   /* Type scale, section 1.4 of the specification.
    *
    * Note where 15px and 16px fall. Italic captions and prices are 15px, the
@@ -99,6 +107,7 @@
   --cn-size-cta: 16px; /* the Enquire CTA, the trade sub header */
   --cn-size-caption: 16px; /* form success messages */
   --cn-size-card: 20px; /* card names and sub headers, everywhere */
+  --cn-size-join: 13px; /* the JOIN submit on the end of the signup rule */
   --cn-size-statement: 22px; /* the italic homepage statement */
   --cn-size-section: 23px; /* section titles */
   --cn-size-collection: 26px; /* the collection index title */

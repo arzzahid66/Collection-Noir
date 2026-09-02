@@ -3,22 +3,58 @@
 import { useState } from "react";
 
 /**
- * The members list signup, section 10.
+ * The Join invitation, given verbatim in the client's approved design.
  *
- * One field, an email address, which is everything the list needs. The
- * client's review asked for a single box on the contact page, so the name is
- * not collected here; the enquiries record is given a fixed name instead, so
- * a signup reads as a signup in the console rather than as a nameless
- * enquiry.
+ * One word in it sits on the prohibited lexicon in section 02, and the copy
+ * lint is right to stop on it. This is the client's own signed off wording,
+ * which section 11 makes authoritative over the lexicon, so the line is
+ * marked rather than reworded. The marker is on this line and this line
+ * only, so the word stays banned everywhere else on the site.
+ */
+const JOIN_INVITATION =
+  "Subscribe to our newsletter for exclusive CN access"; // copy-lint-ok
+
+/**
+ * The members list signup, section 10, as redrawn in the client's Join
+ * design.
  *
- * The submit is the word Join, set as text on the end of the field's rule.
- * The later review asked for the boxed button to go: a bordered block under
- * a single underlined field was the only enclosed control on the page.
+ * Three lines and nothing else. "Join" in italic Cormorant Light at the
+ * headline size, the invitation under it in the sans, and below that a
+ * single rule carrying an Email placeholder on the left and the word JOIN on
+ * the right. No eyebrow above it, no box around the field, no ground behind
+ * it and no rule over the top of the block: the only line in the section is
+ * the one under the field.
+ *
+ * The label is the placeholder rather than a line of its own, which is what
+ * puts the field's copy and its submit on one baseline. A visually hidden
+ * label is kept so the input is still named for a screen reader, since a
+ * placeholder is not an accessible name.
+ *
+ * The whole section is exported as one component rather than as a bare form,
+ * so a page drops the block in whole and the heading, the invitation and the
+ * field cannot drift apart between pages.
+ */
+export function MailingListSection() {
+  return (
+    <section className="join" id="mailing-list" aria-labelledby="join-title">
+      <h2 className="join__title" id="join-title">
+        Join
+      </h2>
+      <p className="join__lede">{JOIN_INVITATION}</p>
+      <MailingListForm />
+    </section>
+  );
+}
+
+/**
+ * The field itself.
  *
  * A signup is written to the enquiries record rather than to a list of its
  * own, so the atelier reads it in the same place it reads everything else
- * that arrives from the site. The message names it as a mailing list request,
- * which is the form section 10 already described in words.
+ * that arrives from the site. The enquiries record is given a fixed name, so
+ * a signup reads as a signup in the console rather than as a nameless
+ * enquiry, and the message names it as a mailing list request, which is the
+ * form section 10 already described in words.
  */
 export function MailingListForm() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -66,41 +102,41 @@ export function MailingListForm() {
 
   if (state === "sent") {
     return (
-      <p className="form__message" role="status">
+      <p className="join__message" role="status">
         Thank you. You are on the list.
       </p>
     );
   }
 
   return (
-    <form className="form form--mailing" onSubmit={onSubmit}>
-      {/* The submit sits on the end of the field's own underline rather than
-          in a box of its own below it, and reads as one word. The client's
-          review asked for text only, a step smaller, and level with the
-          input, so the rule is carried by the row and the input inside it
-          gives its border up. */}
-      <div className="field">
-        <label htmlFor="mailing-email">Email</label>
-        <div className="field__line">
-          <input
-            id="mailing-email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-          />
-          <button
-            className="button--text"
-            type="submit"
-            disabled={state === "sending"}
-          >
-            {state === "sending" ? "Joining" : "Join"}
-          </button>
-        </div>
+    <form className="join__form" onSubmit={onSubmit}>
+      {/* The row carries the rule and the input inside it draws none, so the
+          placeholder and the submit sit on one baseline over a single
+          unbroken line. */}
+      <div className="join__row">
+        <label className="visually-hidden" htmlFor="mailing-email">
+          Email
+        </label>
+        <input
+          className="join__input"
+          id="mailing-email"
+          name="email"
+          type="email"
+          placeholder="Email"
+          required
+          autoComplete="email"
+        />
+        <button
+          className="join__submit"
+          type="submit"
+          disabled={state === "sending"}
+        >
+          {state === "sending" ? "Joining" : "Join"}
+        </button>
       </div>
 
       {error && (
-        <p className="form__error" role="alert">
+        <p className="join__error" role="alert">
           {error}
         </p>
       )}
