@@ -2659,155 +2659,67 @@ b {
   cursor: pointer;
 }
 
-/* ------------------------------------------------------------------- join
+/* ----------------------------------------------------------- mailing list
  *
- * The signup block, section 10, as drawn in the client's approved Join
- * design. It is the one place on the site that sets type in a sans, and the
- * contrast is the design: an italic Cormorant heading over a geometric sans
- * invitation, field and submit. Nothing else may name --cn-font-sans.
+ * The signup block, section 10. Every part of it is a treatment the site
+ * already owns, which is what the client's review asked for: the header is
+ * the same eyebrow that labels Showroom, Contact and Trade, the invitation
+ * is the italic Cormorant this site sets all invitation copy in, and the
+ * field is the standard `.field__line` with `.button--text` on the end of
+ * its rule. There is no type here that is not already used elsewhere.
  *
- * Left aligned on the page gutter, so "Join" starts on the same vertical
- * line as the wordmark and the footer address. Generous air above and below
- * and nothing ruled across the top: the single rule under the field is the
- * only line in the section, and it is structural, not decorative.
+ * Left aligned on the page gutter, so the header starts on the same vertical
+ * line as the wordmark and the footer address. Generous air above and below,
+ * and nothing ruled across the top: the rule under the field is the only
+ * line in the section, and it is structural, not decorative.
  */
 
-.join {
+.mailing {
   padding: var(--cn-major-gap) var(--cn-page-padding);
 }
 
-/* Cormorant Light italic at the headline size, tracked open. The design
- * letterspaces it well past the site's other headings, which is what makes
- * four letters hold the width of the block above the field. */
-.join__title {
+/* The eyebrow carries its own 18px bottom margin, which is the gap this
+ * section wants between the header and the invitation. */
+.mailing__title {
+  margin: 0 0 18px;
+}
+
+/* Italic Cormorant in Ink with no tracking: copy, not a label, and the same
+ * register the showroom and contact blocks are set in. */
+.mailing__lede {
   font-family: var(--cn-font);
   font-style: italic;
   font-weight: 300;
-  font-size: var(--cn-size-headline);
-  line-height: 1.1;
-  letter-spacing: 0.1em;
-  color: var(--cn-ink);
-  margin: 0 0 42px;
-}
-
-/* The invitation. Sans, regular, and no tracking: this is a sentence, not a
- * label. Set at the statement size rather than at body: the design carries it
- * across most of the width of the field beneath it, which 15px will not do,
- * and it is still comfortably under the heading. */
-.join__lede {
-  font-family: var(--cn-font-sans);
-  font-style: normal;
-  font-weight: 400;
-  font-size: var(--cn-size-statement);
-  line-height: 1.5;
+  font-size: var(--cn-size-body);
+  line-height: 1.7;
   letter-spacing: 0;
-  text-transform: none;
   color: var(--cn-ink);
-  margin: 0 0 76px;
+  margin: 0 0 40px;
+  max-width: 34em;
 }
 
-/* Wide, but not the full measure of the page: the design leaves the rule
- * short of the right gutter, and a cap stops it sprawling on a large
- * monitor. */
-.join__form {
+/* Wide, but short of the right gutter, and capped so the rule does not run
+ * the width of a large monitor. */
+.mailing__form {
   margin: 0;
-  max-width: 72em;
+  max-width: 44em;
 }
 
-/* The row carries the rule; the input inside it draws none, so the
- * placeholder and the submit sit on one baseline over one unbroken line.
- * Baseline rather than centre, because the two are different sizes and it is
- * the type that has to line up, not the boxes. */
-.join__row {
-  display: flex;
-  align-items: baseline;
-  gap: 24px;
-  border-bottom: var(--cn-hairline-weight) solid var(--cn-field);
-}
-
-/* No border, no ground, no padding box. The underline belongs to the row. */
-.join__input {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-family: var(--cn-font-sans);
-  font-weight: 400;
-  font-size: var(--cn-size-statement);
-  line-height: 1.5;
-  color: var(--cn-ink);
-  background: none;
-  border: 0;
-  padding: 0 0 22px;
-  width: 100%;
-}
-
-/* The word Email is the label, so it is set as the field's own copy rather
- * than as a hint: same size and face as the invitation above it, in Clay. */
-.join__input::placeholder {
-  color: var(--cn-clay);
-  opacity: 1;
-}
-
-/* No outline on focus. The rule under the row changes colour instead, which
- * is the only visible state this design draws. */
-.join__input:focus {
-  outline: 0;
-}
-
-.join__row:focus-within {
-  border-bottom-color: var(--cn-ink);
-}
-
-/* Text only, on the end of the field's own rule. Uppercase and tracked, a
- * step smaller than the field's copy so the field stays the larger of the
- * two. */
-.join__submit {
-  font-family: var(--cn-font-sans);
-  font-weight: 400;
-  font-size: var(--cn-size-join);
-  letter-spacing: var(--cn-track-20);
-  text-transform: uppercase;
-  color: var(--cn-ink);
-  background: none;
-  border: 0;
-  padding: 0 0 22px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.join__submit:hover {
-  color: var(--cn-bark);
-}
-
-.join__submit:disabled {
-  color: var(--cn-clay);
-  cursor: default;
-}
-
-/* The two states that replace or follow the field. Both stay in the sans, so
- * the block does not change voice when it answers. */
-.join__message {
-  font-family: var(--cn-font-sans);
-  font-weight: 400;
-  font-size: var(--cn-size-statement);
+/* Cormorant at the caption size, which is what every other form on the site
+ * answers in. */
+.mailing__message {
+  font-family: var(--cn-font);
+  font-size: var(--cn-size-caption);
   color: var(--cn-ink);
   margin: 0;
 }
 
-.join__error {
-  font-family: var(--cn-font-sans);
-  font-weight: 400;
+.mailing__error {
+  font-family: var(--cn-font);
+  font-style: italic;
   font-size: var(--cn-size-body);
   color: var(--cn-bark);
   margin: 18px 0 0;
-}
-
-@media (max-width: 768px) {
-  .join__title {
-    margin-bottom: 28px;
-  }
-  .join__lede {
-    margin-bottom: 48px;
-  }
 }
 
 /* ---------------------------------------------------------- skip and a11y */

@@ -115,9 +115,9 @@ export default async function EnquirePage({ searchParams }: Props) {
 
       {/* Section 10 requires a mailing list signup that the footer of every
           page can reach. The footer link lands here, and the block is the
-          client's approved Join design: full width beneath the two columns
-          rather than squeezed into the left one, so the field runs the width
-          the design draws it at. Nothing rules off the top of it. */}
+          block sits full width beneath the two columns rather than squeezed
+          into the left one, so the field runs the width the design draws it
+          at. Nothing rules off the top of it. */}
       <MailingListSection />
     </>
   );

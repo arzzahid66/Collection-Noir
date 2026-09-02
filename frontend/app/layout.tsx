@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import { Cormorant_Garamond } from "next/font/google";
 
 import { CookieBanner } from "@/components/CookieBanner";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -29,29 +29,6 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
 });
 
-/**
- * The one sans on the site, and it carries exactly one block: the Join
- * signup, section 10.
- *
- * The rest of the site is Cormorant throughout, and that rule still holds
- * everywhere else. The client's approved Join design sets the heading in
- * italic Cormorant and everything under it — the invitation, the field's
- * Email placeholder and the word Join on the end of the rule — in a
- * geometric sans, so the two registers are the point of the block rather
- * than a slip. Jost is the open cut closest to the reference: geometric,
- * wide apertures, a double storey a.
- *
- * Loaded at 300 and 400 only, which is all that block asks for, and served
- * from this origin like the Cormorant above it, so it adds no third party
- * to the Cookie Policy.
- */
-const jost = Jost({
-  subsets: ["latin"],
-  weight: ["300", "400"],
-  display: "swap",
-  variable: "--font-jost",
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL("https://collectionnoir.com"),
   title: {
@@ -78,11 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
      * attributes and text of the element carrying it, so a genuine mismatch
      * anywhere inside the application is still reported normally.
      */
-    <html
-      lang="en-GB"
-      className={`${cormorant.variable} ${jost.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en-GB" className={cormorant.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <a className="skip-link" href="#main">
           Skip to content
