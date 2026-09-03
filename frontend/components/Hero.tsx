@@ -50,6 +50,17 @@ export function Hero({
         />
       )}
 
+      {/* The empty slot says so. Every other frame on the site names itself
+          when it has no photograph attached; the hero was the one that did
+          not, so with nothing supplied it read as a blank band rather than as
+          a slot waiting on its asset. Marked presentational: it is a note to
+          whoever is loading the catalogue, not content. */}
+      {!frame && (
+        <span className="image-placeholder hero__placeholder" role="presentation">
+          HERO PHOTOGRAPH
+        </span>
+      )}
+
       <div className="hero__inner">
         {/* Left, vertically centred, 48px from the edge. */}
         <div className="hero__lead">

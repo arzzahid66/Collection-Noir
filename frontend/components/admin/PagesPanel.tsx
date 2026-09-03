@@ -6,12 +6,36 @@ import { adminApi } from "@/lib/admin";
 import type { Page } from "@/lib/types";
 import { PanelProps, usePanelStatus } from "./common";
 
-const GROUPS: { heading: string; prefix?: string; slugs?: string[] }[] = [
+interface PageGroup {
+  heading: string;
+  prefix?: string;
+  slugs?: string[];
+  /** Claims every page no earlier group matched. Exactly one group sets it. */
+  rest?: boolean;
+}
+
+/**
+ * The sidebar groups.
+ *
+ * The atelier pages are matched by prefix rather than named one by one. They
+ * were named before, and three of them were left out: `atelier-founder`,
+ * `atelier-designers` and `atelier-press` all exist, all render on the
+ * atelier page, and none of them could be reached here, so the founder's
+ * quote, the For Designers copy and the placeholder publication names under
+ * "As seen in" had no way of being edited from the console at all.
+ *
+ * The last group is the reason that cannot happen again. A page record the
+ * groups above do not claim used to fall out of the list silently, which is
+ * a poor failure: the record is live on the site and the only sign that it
+ * exists is that nobody can edit it. Now it lands under "Other pages"
+ * instead, so the console always accounts for every page the API returns.
+ */
+const GROUPS: PageGroup[] = [
   { heading: "Home", slugs: ["home-intro", "home-bespoke"] },
+  { heading: "The Atelier", prefix: "atelier" },
   {
     heading: "Standing pages",
     slugs: [
-      "atelier",
       "materials-intro",
       "care",
       "trade",
@@ -24,6 +48,7 @@ const GROUPS: { heading: string; prefix?: string; slugs?: string[] }[] = [
     ],
   },
   { heading: "Legal", prefix: "legal-" },
+  { heading: "Other pages", rest: true },
 ];
 
 export function PagesPanel({ onUnauthorised }: PanelProps) {
@@ -69,10 +94,20 @@ export function PagesPanel({ onUnauthorised }: PanelProps) {
     }
   }
 
-  const groupedSlugs = (group: (typeof GROUPS)[number]) =>
-    group.prefix
-      ? pages.filter((p) => p.slug.startsWith(group.prefix!))
-      : pages.filter((p) => group.slugs?.includes(p.slug));
+  /* A page is spoken for if any group names it or matches its prefix. The
+     catch all group claims nothing itself, so it cannot match here. */
+  const claimed = (page: Page) =>
+    GROUPS.some((group) =>
+      group.prefix
+        ? page.slug.startsWith(group.prefix)
+        : (group.slugs?.includes(page.slug) ?? false),
+    );
+
+  const groupedSlugs = (group: PageGroup) => {
+    if (group.rest) return pages.filter((page) => !claimed(page));
+    if (group.prefix) return pages.filter((p) => p.slug.startsWith(group.prefix!));
+    return pages.filter((p) => group.slugs?.includes(p.slug));
+  };
 
   return (
     <div className="admin__grid">

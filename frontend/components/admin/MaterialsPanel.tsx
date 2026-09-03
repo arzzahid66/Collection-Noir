@@ -6,6 +6,22 @@ import { adminApi } from "@/lib/admin";
 import type { ImageRef, Material } from "@/lib/types";
 import { PanelProps, usePanelStatus } from "./common";
 
+/**
+ * The slug is derived rather than asked for.
+ *
+ * It is the material's address on the site, and a person adding "Burr Walnut"
+ * has no reason to also be asked for "burr-walnut". The API rejects a
+ * duplicate with a 409, which surfaces here as the message it sends back,
+ * so a clash is reported rather than guessed at with a suffix.
+ */
+function slugFor(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export function MaterialsPanel({ onUnauthorised }: PanelProps) {
   const { status, tone, report, say } = usePanelStatus(onUnauthorised);
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -28,6 +44,38 @@ export function MaterialsPanel({ onUnauthorised }: PanelProps) {
   }, [load]);
 
   const selected = materials.find((m) => m.id === selectedId) ?? null;
+
+  /*
+   * Adding a material.
+   *
+   * The endpoint and the client method have both existed since the console
+   * was built; nothing called them, so the library was fixed at whatever the
+   * seed had put there and the three burl timbers had no way in. Only a name
+   * and a family are asked for here. Everything else, including the swatch
+   * colour and the photograph, is set in the form beside the list once the
+   * material exists.
+   */
+  async function create(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const name = String(data.get("new_name") ?? "").trim();
+    if (!name) return;
+
+    try {
+      const created = await adminApi.createMaterial({
+        slug: slugFor(name),
+        name,
+        family: String(data.get("new_family") ?? "marble"),
+      });
+      setMaterials((current) => [...current, created]);
+      setSelectedId(created.id);
+      form.reset();
+      say(`Added ${created.name}. Set its provenance and swatch beside the list.`);
+    } catch (error) {
+      report(error);
+    }
+  }
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,6 +121,27 @@ export function MaterialsPanel({ onUnauthorised }: PanelProps) {
             </li>
           ))}
         </ul>
+
+        <form className="admin-form" onSubmit={create} style={{ marginTop: 16 }}>
+          <div className="admin-field">
+            <label htmlFor="m-new-name">Add a material</label>
+            <input
+              id="m-new-name"
+              name="new_name"
+              placeholder="Burr Walnut"
+              required
+            />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="m-new-family">Family</label>
+            <select id="m-new-family" name="new_family" defaultValue="timber">
+              <option value="marble">marble</option>
+              <option value="timber">timber</option>
+              <option value="metal">metal</option>
+            </select>
+          </div>
+          <button type="submit">Add</button>
+        </form>
       </div>
 
       <div>

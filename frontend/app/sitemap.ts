@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/",
     "/collection",
     "/atelier",
+    "/atelier/bespoke",
     "/atelier/materials",
     "/trade",
     "/enquire",
