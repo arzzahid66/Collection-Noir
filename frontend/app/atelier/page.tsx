@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Prose } from "@/components/Prose";
+import { Prose, visibleBody } from "@/components/Prose";
 import { getPage } from "@/lib/api";
 
 export const metadata: Metadata = { title: "The Atelier" };
@@ -66,7 +66,7 @@ export default async function AtelierPage() {
                 real words or sign off before publishing. It is rendered from
                 the page record so the brand team can replace it without a
                 deploy, and it carries the placeholder marker until they do. */}
-            {founder && (
+            {founder && visibleBody(founder.body) !== "" && (
               <blockquote>
                 <Prose body={founder.body} measure="measure-quote" />
               </blockquote>

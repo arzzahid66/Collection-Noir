@@ -19,10 +19,15 @@ import { PRIMARY_NAV, type NavItem } from "@/lib/nav";
  * footer carries the light version on Umber. Two assets rather than one
  * recoloured by CSS, which is the substitution the specification rules out.
  *
- * Atelier carries a menu, per the approved design: The Atelier and Materials.
- * It opens on hover, as designed, and also on keyboard focus, so the two pages
- * under it are reachable without a pointer. The label itself stays a link, so
- * clicking Atelier still goes to the atelier page.
+ * Atelier carries a menu, per the approved design: The Atelier, Bespoke and
+ * Materials. It opens on hover, as designed, and also on keyboard focus, so
+ * the three pages under it are reachable without a pointer. The label itself
+ * stays a link, so clicking Atelier still goes to the atelier page.
+ *
+ * The Atelier repeats the parent's destination on purpose. On a touch screen
+ * the parent row is a toggle that opens the panel rather than a link, so
+ * without that first child the atelier page itself would have no way in from
+ * the drawer.
  */
 export function SiteHeader() {
   const pathname = usePathname();

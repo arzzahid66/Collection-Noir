@@ -81,10 +81,9 @@ PAGES["atelier-bespoke"] = (
     """
 TODO(client): the copy for this page is being written by the brand team. It
 sets out the commission at length: what can be altered, how a commission
-begins, what is asked of the client, and how long the work takes.
-
-The homepage says the same thing in three sentences, under "Bespoke
-commission". This page is where it is said properly.
+begins, what is asked of the client, and how long the work takes. The
+homepage says the same thing in three sentences, under "Bespoke commission";
+this page is where it is said properly.
 """,
 )
 
