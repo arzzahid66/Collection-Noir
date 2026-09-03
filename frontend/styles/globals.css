@@ -2698,11 +2698,16 @@ b {
   max-width: 34em;
 }
 
-/* Wide, but short of the right gutter, and capped so the rule does not run
- * the width of a large monitor. */
+/* The rule is measured against the invitation above it rather than against
+ * the page: the client's review called 44em super long, and at that setting
+ * the line ran better than twice the width of the sentence it sits under,
+ * which is what made it read as a stray rule rather than as a field. A touch
+ * wider than that sentence is enough to read as a field and no wider. Still
+ * ample for an address: the input keeps around 340px of it once Join and the
+ * gap are taken off. */
 .mailing__form {
   margin: 0;
-  max-width: 44em;
+  max-width: 26em;
 }
 
 /* Cormorant at the caption size, which is what every other form on the site
