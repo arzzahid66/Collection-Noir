@@ -141,6 +141,15 @@ platform port variable. Until it is deployed and API_BASE_URL is set in
 Vercel, every content page reads as being prepared regardless of what the
 database would hold.
 
+### The bespoke page stub still leaks a note when the backend is up
+The atelier-bespoke record is two paragraphs and only the first carries the
+TODO(client) marker, so the block rule hides that one and publishes the
+second, which is itself a note to the brand team rather than copy for a
+visitor. The record needs to be one marked block so the page falls back to
+being prepared. It belongs on the backend branch, where the seed actually
+lives; the copy of seed_pages.py on the frontend branch is a stray and is
+deliberately left untouched so the two do not diverge before they are merged.
+
 ### The founder portrait cannot be uploaded
 The mount on the atelier page is a fixed empty div. Making it data driven
 needs an image on the page record, which is a schema change and a migration,
