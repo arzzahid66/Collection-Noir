@@ -72,32 +72,38 @@ export default async function HomePage() {
         )}
       </section>
 
-      {bespoke && (
-        <section className="split">
-          <div>
-            <p className="eyebrow split__eyebrow">Bespoke</p>
-            <h2>
-              Every piece begins
-              <br />
-              with <em>a conversation</em>
-            </h2>
-            {/* Full column width. Section 13 rules out the narrow measure
-                the earlier build capped this at. */}
+      {/* The block itself is not gated on its page record. The eyebrow, the
+          heading, the figure and the call to action are all fixed copy, and
+          the record supplies only the paragraph between them, so gating the
+          whole section on the record took the approved layout and its
+          photography placeholder off the page whenever the record was
+          missing. Only the paragraph waits on the record now. */}
+      <section className="split">
+        <div>
+          <p className="eyebrow split__eyebrow">Bespoke</p>
+          <h2>
+            Every piece begins
+            <br />
+            with <em>a conversation</em>
+          </h2>
+          {/* Full column width. Section 13 rules out the narrow measure
+              the earlier build capped this at. */}
+          {bespoke && (
             <div className="split__body">
               <Prose body={bespoke.body} />
             </div>
-            <Link href="/enquire" className="quiet-link">
-              Enquire
-            </Link>
-          </div>
-          {/* TODO(client): the bespoke photograph is a placeholder block in the
-              approved mockup and no image has been supplied for it. It renders
-              on the mount colour until one is attached. */}
-          <div className="split__figure" role="presentation">
-            <span className="image-placeholder">BESPOKE</span>
-          </div>
-        </section>
-      )}
+          )}
+          <Link href="/enquire" className="quiet-link">
+            Enquire
+          </Link>
+        </div>
+        {/* TODO(client): the bespoke photograph is a placeholder block in the
+            approved mockup and no image has been supplied for it. It renders
+            on the mount colour until one is attached. */}
+        <div className="split__figure" role="presentation">
+          <span className="image-placeholder">BESPOKE</span>
+        </div>
+      </section>
     </>
   );
 }

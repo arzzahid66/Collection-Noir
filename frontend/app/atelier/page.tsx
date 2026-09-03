@@ -46,29 +46,34 @@ export default async function AtelierPage() {
         {page && <Prose body={page.body} />}
       </section>
 
-      {founder && (
-        <section className="founder-block">
-          <p className="eyebrow">The Founder</p>
-          <div className="founder">
-            {/* TODO(client): the founder portrait is a placeholder block in the
-                approved mockup and no photograph has been supplied. */}
-            <div className="founder__portrait" role="presentation" />
-            <div>
-              <p className="founder__name">{founder.title}</p>
-              <p className="founder__role">
-                Founder and Designer, Collection Noir Atelier, London
-              </p>
-              {/* The approved mockup marks this quote as pending and asks for
-                  real words or sign off before publishing. It is rendered from
-                  the page record so the brand team can replace it without a
-                  deploy, and it carries the placeholder marker until they do. */}
+      {/* The portrait mount and the role line are fixed parts of the approved
+          layout, so the block is no longer gated on its page record: with the
+          record missing the whole section used to leave the page, and the
+          photography placeholder with it. The name and the quote are the only
+          parts the record owns, and they are the only parts that wait. */}
+      <section className="founder-block">
+        <p className="eyebrow">The Founder</p>
+        <div className="founder">
+          {/* TODO(client): the founder portrait is a placeholder block in the
+              approved mockup and no photograph has been supplied. */}
+          <div className="founder__portrait" role="presentation" />
+          <div>
+            {founder && <p className="founder__name">{founder.title}</p>}
+            <p className="founder__role">
+              Founder and Designer, Collection Noir Atelier, London
+            </p>
+            {/* The approved mockup marks this quote as pending and asks for
+                real words or sign off before publishing. It is rendered from
+                the page record so the brand team can replace it without a
+                deploy, and it carries the placeholder marker until they do. */}
+            {founder && (
               <blockquote>
                 <Prose body={founder.body} measure="measure-quote" />
               </blockquote>
-            </div>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* The heading, the paragraph and the call to action are centred as one
           group. The eyebrow above them is not: it stays left, which is how

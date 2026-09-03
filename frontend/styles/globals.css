@@ -672,6 +672,23 @@ b {
  * photograph under it: over the bare mount it would be the flat wash the
  * brief rules out.
  */
+/*
+ * The hero's own empty slot label.
+ *
+ * The other frames on the site centre their label with flex. The hero cannot:
+ * its band is already laying out the copy, so the label is positioned against
+ * the band instead. Set at the top and centred, which is the one part of a
+ * 560px band that neither the headline on the left nor the tagline at the
+ * foot right runs through.
+ */
+.hero__placeholder {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
 .hero[data-has-frame="true"]::after {
   content: "";
   position: absolute;
