@@ -23,6 +23,7 @@ venv/
 !.env.*.example
 
 # Server credentials, SSH keys, certificates - NEVER commit
+server_cred
 server_cred/
 .server_cred/
 credentials/
@@ -48,10 +49,9 @@ ssh.txt
 Thumbs.db
 
 # Build artefacts
-frontend/.vercel
-backend/.pytest_cache/
-
 .vercel
+backend/.pytest_cache/
+*.tsbuildinfo
 
 # The pre-reset repository, kept as a safety net. Never publish it.
 .git-old-backup/
