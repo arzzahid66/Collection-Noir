@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Prose, visibleBody } from "@/components/Prose";
-import { getPage } from "@/lib/api";
+import { getPage, getSlotImage } from "@/lib/api";
 
 export const metadata: Metadata = { title: "The Atelier" };
 
@@ -18,11 +18,12 @@ export const dynamic = "force-dynamic";
  * in markup, so the brand team edits it in the console. Section 04.
  */
 export default async function AtelierPage() {
-  const [page, founder, designers, press] = await Promise.all([
+  const [page, founder, designers, press, portrait] = await Promise.all([
     getPage("atelier"),
     getPage("atelier-founder"),
     getPage("atelier-designers"),
     getPage("atelier-press"),
+    getSlotImage("founder"),
   ]);
 
   const publications = (press?.body ?? "")
@@ -54,9 +55,18 @@ export default async function AtelierPage() {
       <section className="founder-block">
         <p className="eyebrow">The Founder</p>
         <div className="founder">
-          {/* TODO(client): the founder portrait is a placeholder block in the
-              approved mockup and no photograph has been supplied. */}
-          <div className="founder__portrait" role="presentation" />
+          {/* The `founder` image slot, set in the console. The mount stands in
+              until a portrait is uploaded. */}
+          {portrait ? (
+            <div
+              className="founder__portrait"
+              style={{ backgroundImage: `url(${portrait.url})` }}
+              role="img"
+              aria-label={founder?.title ?? "The founder"}
+            />
+          ) : (
+            <div className="founder__portrait" role="presentation" />
+          )}
           <div>
             {founder && <p className="founder__name">{founder.title}</p>}
             <p className="founder__role">

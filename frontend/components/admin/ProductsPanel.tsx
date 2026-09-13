@@ -2,34 +2,42 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { adminApi, ratioDelta } from "@/lib/admin";
-import { aspectClass } from "@/lib/format";
-import type { Category, ImageRef, ImageRole, Material, ProductDetail } from "@/lib/types";
-import { IMAGE_ROLES, PanelProps, ROLE_LABEL, PRODUCT_STATUSES, usePanelStatus } from "./common";
+import {
+  adminApi,
+  type AdminCategory,
+  type AdminMaterial,
+  type AdminProduct,
+} from "@/lib/admin";
+import { SlotEditor } from "./ImagesPanel";
+import { DRAFT_SAVED, PanelProps, StatusLine, usePanelStatus } from "./common";
 
-export function ProductsPanel({ onUnauthorised }: PanelProps) {
+/**
+ * Pieces: every piece in the draft, hidden ones included.
+ *
+ * A piece is public only when its status is live and it has a price. Both
+ * are shown against each piece in the list, so a piece that is missing from
+ * the site says why.
+ */
+export function ProductsPanel({ onUnauthorised, onDraftChanged }: PanelProps) {
   const { status, tone, report, say } = usePanelStatus(onUnauthorised);
 
-  const [products, setProducts] = useState<ProductDetail[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [library, setLibrary] = useState<ImageRef[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [materials, setMaterials] = useState<AdminMaterial[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [p, c, m, i] = await Promise.all([
+      const [p, c, m] = await Promise.all([
         adminApi.products(),
         adminApi.categories(),
         adminApi.materials(),
-        adminApi.images(),
       ]);
       setProducts(p);
       setCategories(c);
-      setMaterials(m);
-      setLibrary(i);
-      setSelectedId((current) => current ?? p[0]?.id ?? null);
+      setMaterials(m.materials);
+      setSelectedSlug((current) => current ?? p[0]?.slug ?? null);
     } catch (error) {
       report(error);
     }
@@ -40,130 +48,91 @@ export function ProductsPanel({ onUnauthorised }: PanelProps) {
   }, [load]);
 
   const selected = useMemo(
-    () => products.find((p) => p.id === selectedId) ?? null,
-    [products, selectedId],
+    () => products.find((p) => p.slug === selectedSlug) ?? null,
+    [products, selectedSlug],
   );
 
-  const refreshOne = (updated: ProductDetail) =>
-    setProducts((current) => current.map((p) => (p.id === updated.id ? updated : p)));
+  const replace = (updated: AdminProduct) =>
+    setProducts((current) => current.map((p) => (p.slug === updated.slug ? updated : p)));
 
-  async function saveDetails(event: React.FormEvent<HTMLFormElement>) {
+  async function create(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected) return;
-    setBusy(true);
     const form = new FormData(event.currentTarget);
-    const rawPrice = String(form.get("price_from") ?? "").trim();
-
     try {
-      const updated = await adminApi.updateProduct(selected.id, {
-        name: String(form.get("name") ?? ""),
-        slug: String(form.get("slug") ?? ""),
-        subtitle: String(form.get("subtitle") ?? "") || null,
-        category_id: Number(form.get("category_id")),
-        // Sent as entered. Nothing here rounds, because launch prices are
-        // already round numbers in the source data and reformatting could
-        // contradict it.
-        price_from: rawPrice === "" ? null : Number(rawPrice),
-        pricing_status: String(form.get("pricing_status") ?? "from"),
-        purchasable: form.get("purchasable") === "on",
-        base_description: String(form.get("base_description") ?? "") || null,
-        base: String(form.get("base") ?? "") || null,
-        dimensions: String(form.get("dimensions") ?? "") || null,
-        lead_time_weeks: String(form.get("lead_time_weeks") ?? "") || null,
-        bespoke_box_type: String(form.get("bespoke_box_type") ?? "standard"),
-        cross_link_slug: String(form.get("cross_link_slug") ?? "") || null,
-        status: String(form.get("status") ?? "draft"),
+      const created = await adminApi.createProduct({
+        name: String(form.get("name") ?? "").trim(),
+        category: String(form.get("category") ?? ""),
+        status: "paused",
       });
-      refreshOne(updated);
-      say("Saved. The public site reflects this immediately.");
+      setProducts((current) => [...current, created]);
+      setSelectedSlug(created.slug);
+      setCreating(false);
+      say(`${created.name} added as paused. Fill it in, then set it live and publish.`);
+      onDraftChanged();
     } catch (error) {
       report(error);
-    } finally {
-      setBusy(false);
     }
   }
 
-  async function attach(imageId: number, role: ImageRole) {
-    if (!selected) return;
+  async function remove(product: AdminProduct) {
+    if (!window.confirm(`Remove ${product.name} (${product.slug})? It leaves the site on publish.`)) {
+      return;
+    }
     try {
-      refreshOne(await adminApi.attachImage(selected.id, imageId, role, selected.images.length));
-      say("Image attached.");
+      await adminApi.deleteProduct(product.slug);
+      setProducts((current) => current.filter((p) => p.slug !== product.slug));
+      setSelectedSlug(null);
+      say(`${product.name} removed from the draft.`);
+      onDraftChanged();
     } catch (error) {
       report(error);
     }
   }
-
-  async function detach(linkId: number) {
-    if (!selected) return;
-    try {
-      await adminApi.detachImage(selected.id, linkId);
-      refreshOne(await adminApi.product(selected.id));
-      say("Image removed from this piece. It stays in the library.");
-    } catch (error) {
-      report(error);
-    }
-  }
-
-  async function setRole(linkId: number, imageId: number, role: ImageRole, sortOrder: number) {
-    if (!selected) return;
-    try {
-      refreshOne(
-        await adminApi.updateProductImage(selected.id, linkId, imageId, role, sortOrder),
-      );
-    } catch (error) {
-      report(error);
-    }
-  }
-
-  const target = selected ? (selected.aspect_ratio as "3-2" | "4-5") : "4-5";
-
-  const readiness = selected
-    ? [
-        selected.status === "live" ? null : "status is not live",
-        selected.price_from === null && selected.pricing_status === "from"
-          ? "no confirmed price"
-          : null,
-        selected.images.length === 0 ? "no photograph" : null,
-      ].filter(Boolean)
-    : [];
 
   return (
     <div className="admin__grid">
       <div>
-        <p className="admin-field" style={{ marginBottom: 10 }}>
-          <label>Pieces</label>
-        </p>
+        <div className="admin-actions" style={{ marginBottom: 12 }}>
+          <button type="button" className="admin-button" onClick={() => setCreating(true)}>
+            Add a piece
+          </button>
+        </div>
         <ul className="admin-list">
           {categories.map((category) => {
-            const inCategory = products.filter((p) => p.category_slug === category.slug);
-            if (inCategory.length === 0) return null;
+            const inCategory = products.filter((p) => p.category === category.slug);
             return (
               <li key={category.slug} style={{ borderBottom: "none" }}>
-                <p
-                  className="admin-field"
-                  style={{ padding: "12px 8px 4px", margin: 0 }}
-                >
+                <p className="admin-field" style={{ padding: "12px 8px 4px", margin: 0 }}>
                   <label>
-                    {category.name} · {category.aspect_ratio}
+                    {category.name} · {category.ratio}
                   </label>
                 </p>
                 <ul className="admin-list" style={{ borderTop: "none", maxHeight: "none" }}>
                   {inCategory.map((product) => (
-                    <li key={product.id}>
+                    <li key={product.slug}>
                       <button
                         type="button"
-                        data-active={product.id === selectedId}
-                        onClick={() => setSelectedId(product.id)}
+                        data-active={product.slug === selectedSlug && !creating}
+                        onClick={() => {
+                          setCreating(false);
+                          setSelectedSlug(product.slug);
+                        }}
                       >
                         {product.name}
+                        {product.subtitle ? `, ${product.subtitle.toLowerCase()}` : ""}
                         <span className="meta">
-                          {product.status}
-                          {product.price_from === null ? " · no price" : ""}
-                          {product.images.length === 0 ? " · no image" : ""}
+                          {visibility(product)}
                         </span>
                       </button>
                     </li>
                   ))}
+                  {inCategory.length === 0 && (
+                    <li>
+                      <span className="meta" style={{ padding: "8px", display: "block" }}>
+                        No pieces
+                      </span>
+                    </li>
+                  )}
                 </ul>
               </li>
             );
@@ -172,424 +141,358 @@ export function ProductsPanel({ onUnauthorised }: PanelProps) {
       </div>
 
       <div>
-        {status && (
-          <p className="admin-status" data-tone={tone} role="status">
-            {status}
-          </p>
-        )}
+        <StatusLine status={status} tone={tone} />
 
-        {!selected ? (
-          <p className="admin-status">No pieces yet.</p>
-        ) : (
-          <>
+        {creating ? (
+          <form className="admin-form" onSubmit={create}>
             <p className="admin-note">
-              A piece reaches the public site only when its status is live, it
-              has a confirmed price, and it has at least one photograph. This is
-              what keeps an unpriced piece off the site rather than showing it
-              as price on application.
-              {readiness.length > 0 && (
-                <>
-                  {" "}
-                  This piece is not published: {readiness.join(", ")}.
-                </>
-              )}
+              A new piece starts paused, so nothing appears on the site until it has a
+              price, is set live and the draft is published. Its web address is made from
+              the name and never changes afterwards.
             </p>
-
-            <form className="admin-form" onSubmit={saveDetails} key={selected.id}>
-              <div className="row">
-                <div className="admin-field">
-                  <label htmlFor="p-name">Name</label>
-                  <input id="p-name" name="name" defaultValue={selected.name} required />
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="p-slug">Slug</label>
-                  <input id="p-slug" name="slug" defaultValue={selected.slug} required />
-                  <span className="hint">
-                    Scoped to its category, so the same name can be used in two
-                    categories.
-                  </span>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="admin-field">
-                  <label htmlFor="p-subtitle">Subtitle</label>
-                  <input
-                    id="p-subtitle"
-                    name="subtitle"
-                    defaultValue={selected.subtitle ?? ""}
-                    placeholder="Dining table"
-                  />
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="p-category">Category</label>
-                  <select
-                    id="p-category"
-                    name="category_id"
-                    defaultValue={
-                      categories.find((c) => c.slug === selected.category_slug)?.id ?? ""
-                    }
-                  >
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name} ({category.aspect_ratio})
-                      </option>
-                    ))}
-                  </select>
-                  <span className="hint">
-                    Sets the card shape on the grid.
-                  </span>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="admin-field">
-                  <label htmlFor="p-price">Starting price, whole pounds</label>
-                  <input
-                    id="p-price"
-                    name="price_from"
-                    type="number"
-                    min="0"
-                    step="10"
-                    defaultValue={selected.price_from ?? ""}
-                    placeholder="8400"
-                  />
-                  <span className="hint">
-                    Renders as &ldquo;Starting from £8,400&rdquo;. Launch prices
-                    are round numbers ending in zero.
-                  </span>
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="p-pricing">Pricing</label>
-                  <select
-                    id="p-pricing"
-                    name="pricing_status"
-                    defaultValue={selected.pricing_status}
-                  >
-                    <option value="from">Starting from</option>
-                    <option value="poa">Price on application</option>
-                  </select>
-                  <span className="hint">
-                    Price on application is not used at launch. It exists for
-                    future flexibility only.
-                  </span>
-                </div>
-              </div>
-
+            <div className="row">
               <div className="admin-field">
-                <label htmlFor="p-description">Description</label>
-                <textarea
-                  id="p-description"
-                  name="base_description"
-                  defaultValue={selected.base_description ?? ""}
-                />
-                <span className="hint">
-                  A short editorial note, not sales copy. Name the material
-                  before the piece.
-                </span>
+                <label htmlFor="new-name">Name</label>
+                <input id="new-name" name="name" required maxLength={120} autoFocus />
               </div>
-
-              <div className="row">
-                <div className="admin-field">
-                  <label htmlFor="p-dimensions">Dimensions</label>
-                  <input
-                    id="p-dimensions"
-                    name="dimensions"
-                    defaultValue={selected.dimensions ?? ""}
-                    placeholder="D1.3m (4 to 6 seats), H75cm"
-                  />
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="p-lead">Lead time, weeks</label>
-                  <input
-                    id="p-lead"
-                    name="lead_time_weeks"
-                    defaultValue={selected.lead_time_weeks ?? ""}
-                    placeholder="12-16"
-                  />
-                  <span className="hint">
-                    Dining tables 12-16. Everything else 8-10.
-                  </span>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="admin-field">
-                  <label htmlFor="p-base">Base</label>
-                  <input
-                    id="p-base"
-                    name="base"
-                    defaultValue={selected.base ?? ""}
-                    placeholder="Detachable pedestal"
-                  />
-                  <span className="hint">
-                    The construction note printed in the specification table.
-                  </span>
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="p-bespoke">Bespoke panel</label>
-                  <select
-                    id="p-bespoke"
-                    name="bespoke_box_type"
-                    defaultValue={selected.bespoke_box_type}
-                  >
-                    <option value="standard">Standard</option>
-                    <option value="size_only">Size only, finish is fixed</option>
-                  </select>
-                  <span className="hint">
-                    Size only is for a piece made in a fixed pairing of
-                    materials, as the Ida is.
-                  </span>
-                </div>
-              </div>
-
               <div className="admin-field">
-                <label htmlFor="p-crosslink">Paired with</label>
-                <input
-                  id="p-crosslink"
-                  name="cross_link_slug"
-                  defaultValue={selected.cross_link_slug ?? ""}
-                  placeholder="otis-side"
-                  list="product-slugs"
-                />
-                <datalist id="product-slugs">
-                  {products
-                    .filter((p) => p.id !== selected.id)
-                    .map((p) => (
-                      <option key={p.id} value={p.slug}>
-                        {p.name}, {p.category_name}
-                      </option>
-                    ))}
-                </datalist>
-                <span className="hint">
-                  The slug of a piece designed to sit with this one, which
-                  renders a cross reference on both pages. Set it on both
-                  halves. Leave empty if the piece stands alone.
-                </span>
-              </div>
-
-              <div className="row">
-                <div className="admin-field">
-                  <label htmlFor="p-status">Status</label>
-                  <select id="p-status" name="status" defaultValue={selected.status}>
-                    {PRODUCT_STATUSES.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="admin-field">
-                  <label htmlFor="p-purchasable">Call to action</label>
-                  <label
-                    style={{
-                      textTransform: "none",
-                      letterSpacing: 0,
-                      fontSize: 12,
-                      color: "var(--cn-ink)",
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "center",
-                    }}
-                  >
-                    <input
-                      id="p-purchasable"
-                      name="purchasable"
-                      type="checkbox"
-                      defaultChecked={selected.purchasable}
-                      style={{ width: "auto" }}
-                    />
-                    Add to Order
-                  </label>
-                  <span className="hint">
-                    Leave unticked and the piece shows Enquire. Ticking it shows
-                    Add to Order, which is reserved for the next collection and
-                    has no checkout behind it yet. No launch piece uses it.  copy-lint-ok
-                  </span>
-                </div>
-              </div>
-
-              <div className="admin-actions">
-                <button className="admin-button" type="submit" disabled={busy}>
-                  {busy ? "Saving" : "Save piece"}
-                </button>
-              </div>
-            </form>
-
-            {/* --- images --- */}
-            <h2 style={{ margin: "44px 0 8px", fontSize: 18 }}>
-              Photography
-              <span className="pill">target {selected.aspect_ratio}</span>
-            </h2>
-            <p className="admin-note">
-              Photographs are stored and displayed exactly as supplied. Nothing
-              is cropped. An image whose shape does not match the category frame
-              is centred on a mount with clean margin, which is correct
-              behaviour. Where the badge reads amber, the fix is a reshoot at
-              the right framing rather than anything in the code.
-            </p>
-
-            {selected.images.length === 0 ? (
-              <p className="admin-status">No photographs attached yet.</p>
-            ) : (
-              selected.images.map((link) => {
-                const check = ratioDelta(link.image, target);
-                return (
-                  <div className="attached-image" key={link.id}>
-                    <div
-                      className={`attached-image__thumb ${aspectClass(selected.aspect_ratio)}`}
-                      style={{ backgroundImage: `url(${link.image.url})` }}
-                    />
-                    <div>
-                      <p className="image-tile__meta">{link.image.filename}</p>
-                      <p className="image-tile__meta">
-                        {link.image.width} × {link.image.height}
-                      </p>
-                      <span className="ratio-badge" data-ok={check.withinTolerance}>
-                        {check.label}
-                      </span>
-                      <div className="admin-field" style={{ marginTop: 6 }}>
-                        <label htmlFor={`role-${link.id}`}>Role</label>
-                        <select
-                          id={`role-${link.id}`}
-                          value={link.role}
-                          onChange={(event) =>
-                            setRole(
-                              link.id,
-                              link.image.id,
-                              event.target.value as ImageRole,
-                              link.sort_order,
-                            )
-                          }
-                        >
-                          {IMAGE_ROLES.map((role) => (
-                            <option key={role} value={role}>
-                              {ROLE_LABEL[role]}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="admin-button admin-button--quiet"
-                      onClick={() => detach(link.id)}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                );
-              })
-            )}
-
-            <div className="admin-field" style={{ marginTop: 20, maxWidth: 420 }}>
-              <label htmlFor="attach-image">Attach from the library</label>
-              <select
-                id="attach-image"
-                defaultValue=""
-                onChange={(event) => {
-                  const id = Number(event.target.value);
-                  if (id) {
-                    void attach(id, selected.images.length === 0 ? "primary" : "hero");
-                    event.target.value = "";
-                  }
-                }}
-              >
-                <option value="">Choose an image</option>
-                {library.map((image) => (
-                  <option key={image.id} value={image.id}>
-                    {image.filename} ({image.width}×{image.height})
-                  </option>
-                ))}
-              </select>
-              <span className="hint">
-                Upload new photography under Images first.
-              </span>
-            </div>
-
-            {/* --- materials --- */}
-            <h2 style={{ margin: "44px 0 8px", fontSize: 18 }}>Materials</h2>
-            {selected.materials.length === 0 ? (
-              <p className="admin-status">No materials listed yet.</p>
-            ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Material</th>
-                    <th>Provenance</th>
-                    <th>Default</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {selected.materials.map((link) => (
-                    <tr key={link.id}>
-                      <td>{link.material.name}</td>
-                      <td>
-                        {[link.material.quarry, link.material.region, link.material.origin]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </td>
-                      <td>{link.is_default ? "Yes" : ""}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="admin-button admin-button--quiet"
-                          onClick={async () => {
-                            try {
-                              await adminApi.detachMaterial(selected.id, link.id);
-                              refreshOne(await adminApi.product(selected.id));
-                            } catch (error) {
-                              report(error);
-                            }
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
+                <label htmlFor="new-category">Collection</label>
+                <select id="new-category" name="category" required>
+                  {categories.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {c.name}
+                    </option>
                   ))}
-                </tbody>
-              </table>
-            )}
-
-            <div className="admin-field" style={{ marginTop: 20, maxWidth: 420 }}>
-              <label htmlFor="attach-material">Add a material</label>
-              <select
-                id="attach-material"
-                defaultValue=""
-                onChange={async (event) => {
-                  const id = Number(event.target.value);
-                  event.target.value = "";
-                  if (!id) return;
-                  try {
-                    refreshOne(
-                      await adminApi.attachMaterial(
-                        selected.id,
-                        id,
-                        selected.materials.length === 0,
-                      ),
-                    );
-                  } catch (error) {
-                    report(error);
-                  }
-                }}
-              >
-                <option value="">Choose a material</option>
-                {materials.map((material) => (
-                  <option key={material.id} value={material.id}>
-                    {material.name}
-                  </option>
-                ))}
-              </select>
-              <span className="hint">
-                The first material added becomes the default, which is the one
-                named on the product page.
-              </span>
+                </select>
+              </div>
             </div>
-          </>
+            <div className="admin-actions">
+              <button type="submit" className="admin-button">
+                Create
+              </button>
+              <button
+                type="button"
+                className="admin-button admin-button--quiet"
+                onClick={() => setCreating(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : !selected ? (
+          <p className="admin-status">Choose a piece.</p>
+        ) : (
+          <ProductEditor
+            key={selected.slug}
+            product={selected}
+            products={products}
+            categories={categories}
+            materials={materials}
+            onSaved={(updated) => {
+              replace(updated);
+              say(DRAFT_SAVED);
+              onDraftChanged();
+            }}
+            onError={report}
+            onRemove={() => remove(selected)}
+            onImageMessage={say}
+          />
         )}
       </div>
+    </div>
+  );
+}
+
+function visibility(product: AdminProduct): string {
+  const reasons = [
+    product.status !== "live" ? "paused" : null,
+    product.price_from === null ? "no price" : null,
+  ].filter(Boolean);
+  return reasons.length ? `Hidden · ${reasons.join(", ")}` : "Live";
+}
+
+function ProductEditor({
+  product,
+  products,
+  categories,
+  materials,
+  onSaved,
+  onError,
+  onRemove,
+  onImageMessage,
+}: {
+  product: AdminProduct;
+  products: AdminProduct[];
+  categories: AdminCategory[];
+  materials: AdminMaterial[];
+  onSaved: (product: AdminProduct) => void;
+  onError: (error: unknown) => void;
+  onRemove: () => void;
+  onImageMessage: (message: string) => void;
+}) {
+  const [stones, setStones] = useState<string[]>(product.stones);
+  const [related, setRelated] = useState<string[]>(product.related);
+  const [busy, setBusy] = useState(false);
+
+  const others = products.filter((p) => p.slug !== product.slug);
+  const known = new Set(materials.map((m) => m.name));
+  const ratio = categories.find((c) => c.slug === product.category)?.ratio ?? "4/5";
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const text = (key: string) => String(form.get(key) ?? "").trim();
+    const price = text("price_from").replace(/[£,\s]/g, "");
+
+    if (price !== "" && !/^\d+(\.\d+)?$/.test(price)) {
+      onError(new Error("The price must be a number, for example 6750."));
+      return;
+    }
+
+    setBusy(true);
+    try {
+      onSaved(
+        await adminApi.updateProduct(product.slug, {
+          name: text("name"),
+          subtitle: text("subtitle"),
+          category: text("category"),
+          // Blank means no confirmed price, which keeps the piece off the site.
+          price_from: price === "" ? null : Number(price),
+          status: text("status") === "live" ? "live" : "paused",
+          lead: text("lead"),
+          base: text("base"),
+          dimensions: text("dimensions"),
+          description: text("description"),
+          fixedFinish: form.get("fixedFinish") === "on",
+          cross: text("cross") || null,
+          stones,
+          related: related.filter(Boolean).slice(0, 3),
+        }),
+      );
+    } catch (error) {
+      onError(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function move(index: number, by: number) {
+    setStones((current) => {
+      const next = [...current];
+      const [item] = next.splice(index, 1);
+      next.splice(index + by, 0, item);
+      return next;
+    });
+  }
+
+  return (
+    <>
+      <p className="admin-note">
+        <strong>{product.name}</strong> · /collection/{product.category}/{product.slug} ·{" "}
+        {visibility(product)}. Changes are saved to the draft and reach the site when the
+        draft is published.
+      </p>
+
+      <form className="admin-form" onSubmit={save}>
+        <div className="row">
+          <Field label="Name" name="name" value={product.name} required />
+          <Field label="Subtitle" name="subtitle" value={product.subtitle} hint="Dining table" />
+        </div>
+
+        <div className="row">
+          <div className="admin-field">
+            <label htmlFor="p-category">Collection</label>
+            <select id="p-category" name="category" defaultValue={product.category}>
+              {categories.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="admin-field">
+            <label htmlFor="p-status">Status</label>
+            <select id="p-status" name="status" defaultValue={product.status}>
+              <option value="live">Live</option>
+              <option value="paused">Paused (hidden)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="row">
+          <Field
+            label="Starting price, £"
+            name="price_from"
+            value={product.price_from === null ? "" : String(product.price_from)}
+            hint="Whole pounds. Blank hides the piece."
+          />
+          <Field label="Lead time" name="lead" value={product.lead} hint="12-16 weeks" />
+        </div>
+
+        <div className="row">
+          <Field label="Base" name="base" value={product.base} hint="Detachable pedestal" />
+          <Field
+            label="Dimensions"
+            name="dimensions"
+            value={product.dimensions}
+            hint="Separate measurements with /"
+          />
+        </div>
+
+        <div className="admin-field">
+          <label htmlFor="p-description">Description</label>
+          <textarea
+            id="p-description"
+            name="description"
+            style={{ minHeight: 180 }}
+            defaultValue={product.description}
+          />
+        </div>
+
+        <div className="admin-field">
+          <label>Materials</label>
+          <span className="hint">The first is the one in the photograph.</span>
+          <ul className="admin-list" style={{ maxHeight: "none" }}>
+            {stones.map((stone, index) => (
+              <li key={`${stone}-${index}`} className="admin-row">
+                <span>
+                  {stone}
+                  {index === 0 && <span className="pill">Shown</span>}
+                  {!known.has(stone) && <span className="pill">Not in library</span>}
+                </span>
+                <span>
+                  <button
+                    type="button"
+                    className="admin-button--link"
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                    aria-label={`Move ${stone} up`}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-button--link"
+                    disabled={index === stones.length - 1}
+                    onClick={() => move(index, 1)}
+                    aria-label={`Move ${stone} down`}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-button--link"
+                    onClick={() => setStones((s) => s.filter((_, i) => i !== index))}
+                  >
+                    Remove
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <select
+            value=""
+            onChange={(event) => {
+              const name = event.target.value;
+              if (name && !stones.includes(name)) setStones((s) => [...s, name]);
+            }}
+          >
+            <option value="">Add a material…</option>
+            {materials
+              .filter((m) => !stones.includes(m.name))
+              .map((m) => (
+                <option key={m.slug} value={m.name}>
+                  {m.group} · {m.name}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        <div className="admin-field">
+          <label>
+            <input type="checkbox" name="fixedFinish" defaultChecked={product.fixedFinish} />{" "}
+            Fixed finish: only the size can change
+          </label>
+        </div>
+
+        <div className="row">
+          <div className="admin-field">
+            <label htmlFor="p-cross">Part of a pair with</label>
+            <select id="p-cross" name="cross" defaultValue={product.cross ?? ""}>
+              <option value="">None</option>
+              {others.map((p) => (
+                <option key={p.slug} value={p.slug}>
+                  {p.name}, {p.subtitle.toLowerCase() || p.category}
+                </option>
+              ))}
+            </select>
+            <span className="hint">The other piece is updated to match.</span>
+          </div>
+          <div className="admin-field">
+            <label>Also consider (up to three)</label>
+            {[0, 1, 2].map((i) => (
+              <select
+                key={i}
+                value={related[i] ?? ""}
+                onChange={(event) =>
+                  setRelated((current) => {
+                    const next = [...current];
+                    next[i] = event.target.value;
+                    return next.filter(Boolean);
+                  })
+                }
+                style={{ marginBottom: 6 }}
+              >
+                <option value="">None</option>
+                {others.map((p) => (
+                  <option key={p.slug} value={p.slug}>
+                    {p.name}, {p.subtitle.toLowerCase() || p.category}
+                  </option>
+                ))}
+              </select>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-actions">
+          <button type="submit" className="admin-button" disabled={busy}>
+            {busy ? "Saving" : "Save to draft"}
+          </button>
+          <button type="button" className="admin-button admin-button--quiet" onClick={onRemove}>
+            Remove piece
+          </button>
+        </div>
+      </form>
+
+      <h2 className="admin-heading">Photographs</h2>
+      <SlotEditor
+        slotKey={`product.${product.slug}`}
+        ratio={ratio}
+        onMessage={onImageMessage}
+        onError={onError}
+      />
+    </>
+  );
+}
+
+function Field({
+  label,
+  name,
+  value,
+  hint,
+  required,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  hint?: string;
+  required?: boolean;
+}) {
+  const id = `p-${name}`;
+  return (
+    <div className="admin-field">
+      <label htmlFor={id}>{label}</label>
+      <input id={id} name={name} defaultValue={value} required={required} placeholder={hint} />
     </div>
   );
 }

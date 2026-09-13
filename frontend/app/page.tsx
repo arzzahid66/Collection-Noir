@@ -3,18 +3,19 @@ import Link from "next/link";
 import { CategoryCard } from "@/components/CategoryCard";
 import { Hero } from "@/components/Hero";
 import { Prose } from "@/components/Prose";
-import { getCategories, getHeroImages, getPage, getProducts } from "@/lib/api";
+import { getCategories, getHeroImages, getPage, getProducts, getSlotImage } from "@/lib/api";
 
 // Every block on this page reads from the database.
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, products, heroImages, intro, bespoke] = await Promise.all([
+  const [categories, products, heroImages, intro, bespoke, bespokeImage] = await Promise.all([
     getCategories(),
     getProducts(),
     getHeroImages(),
     getPage("home-intro"),
     getPage("home-bespoke"),
+    getSlotImage("bespoke"),
   ]);
 
   // The teaser links into the top categories, per section 06. Three cards,
@@ -97,12 +98,20 @@ export default async function HomePage() {
             Enquire
           </Link>
         </div>
-        {/* TODO(client): the bespoke photograph is a placeholder block in the
-            approved mockup and no image has been supplied for it. It renders
-            on the mount colour until one is attached. */}
-        <div className="split__figure" role="presentation">
-          <span className="image-placeholder">BESPOKE</span>
-        </div>
+        {/* The `bespoke` image slot, set in the console. Until a photograph
+            is uploaded the frame renders on the mount colour, named. */}
+        {bespokeImage ? (
+          <div
+            className="split__figure"
+            style={{ backgroundImage: `url(${bespokeImage.url})` }}
+            role="img"
+            aria-label="A bespoke commission in the studio"
+          />
+        ) : (
+          <div className="split__figure" role="presentation">
+            <span className="image-placeholder">BESPOKE</span>
+          </div>
+        )}
       </section>
     </>
   );

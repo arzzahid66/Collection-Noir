@@ -358,3 +358,152 @@
   padding: 2px 7px;
   margin-left: 8px;
 }
+
+/* --- draft and publish ------------------------------------------------- */
+
+.admin-publish {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 32px;
+  border-bottom: var(--cn-hairline-weight) solid var(--cn-hairline);
+  font-size: 12px;
+}
+
+.admin-publish[data-pending="true"] {
+  background: var(--cn-on-light);
+}
+
+.admin-publish strong {
+  font-weight: 600;
+}
+
+.admin-heading {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  margin: 36px 0 14px;
+}
+
+.admin-button--link {
+  font-family: var(--cn-font);
+  font-size: 12px;
+  color: var(--cn-bark);
+  background: none;
+  border: 0;
+  padding: 2px 6px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-button--link:disabled {
+  color: var(--cn-hairline);
+  cursor: default;
+  text-decoration: none;
+}
+
+label.admin-button {
+  display: inline-block;
+}
+
+.admin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.admin-table input,
+.admin-table select,
+.admin-table textarea {
+  font-family: var(--cn-font);
+  font-size: 13px;
+  color: var(--cn-ink);
+  background: var(--cn-ivory);
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+  padding: 6px 8px;
+  width: 100%;
+}
+
+.admin-fields {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.admin-fields div {
+  display: contents;
+}
+
+.admin-fields dt {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cn-clay);
+  padding-top: 3px;
+}
+
+.admin-fields dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* --- image slots ------------------------------------------------------- */
+
+.image-grid--slots {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.slot__photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.slot__photo {
+  margin: 0;
+}
+
+.slot .image-tile__preview {
+  display: grid;
+  place-items: center;
+}
+
+.swatch-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border: var(--cn-hairline-weight) solid var(--cn-hairline);
+  vertical-align: baseline;
+}
+
+/* Inline controls inside a list row and a form keep their natural size. */
+.admin-list .admin-row button {
+  display: inline;
+  width: auto;
+  padding: 2px 6px;
+}
+
+.admin-field input[type="checkbox"] {
+  width: auto;
+  margin-right: 6px;
+}
+
+.admin-field label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+}
+
+/* A piece's or material's photographs sit beside its form, not across it. */
+.admin__grid .slot {
+  max-width: 460px;
+}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { submitForm } from "@/lib/forms";
+
 /**
  * The mailing list invitation, given verbatim in the client's review.
  *
@@ -59,10 +61,9 @@ export function MailingListSection() {
  *
  * A signup is written to the enquiries record rather than to a list of its
  * own, so the atelier reads it in the same place it reads everything else
- * that arrives from the site. The enquiries record is given a fixed name, so
- * a signup reads as a signup in the console rather than as a nameless
- * enquiry, and the message names it as a mailing list request, which is the
- * form section 10 already described in words.
+ * that arrives from the site. It is sent with a fixed first name and
+ * "regarding" line, so a signup reads as a signup in the inbox rather than as
+ * a nameless enquiry.
  */
 export function MailingListForm() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -76,34 +77,19 @@ export function MailingListForm() {
     const form = new FormData(event.currentTarget);
     const value = (key: string) => String(form.get(key) ?? "").trim();
 
-    try {
-      const response = await fetch("/api/enquiries", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          type: "general",
-          name: "Members list",
-          email: value("email"),
-          phone: null,
-          company: null,
-          message: "Members list: please add me to the members list.",
-          product_id: null,
-        }),
-      });
-      if (!response.ok) {
-        setError(
-          response.status === 422
-            ? "Please check the email address and try again."
-            : "That did not send. Please try again, or write to the atelier directly.",
-        );
-        setState("error");
-        return;
-      }
+    const result = await submitForm(
+      "enquiry",
+      {
+        "First Name": "Members list",
+        Email: value("email"),
+        Message: "Members list: please add me to the members list.",
+      },
+      "Members list",
+    );
+    if (result.ok) {
       setState("sent");
-    } catch {
-      setError(
-        "That did not send. Please try again, or write to the atelier directly.",
-      );
+    } else {
+      setError(result.message);
       setState("error");
     }
   }

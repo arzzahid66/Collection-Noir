@@ -1216,6 +1216,15 @@ b {
   background-color: var(--cn-letterbox);
 }
 
+/* A background image gives the frame no height of its own, so the ratio does. */
+.product__image.ratio-3-2 {
+  aspect-ratio: 3 / 2;
+}
+
+.product__image.ratio-4-5 {
+  aspect-ratio: 4 / 5;
+}
+
 /* The rest of the photographs, beneath the one being shown. Small frames that
  * letterbox exactly as the main one does, so nothing is cropped. */
 .product__shots {

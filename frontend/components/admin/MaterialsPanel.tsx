@@ -2,38 +2,26 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { adminApi } from "@/lib/admin";
-import type { ImageRef, Material } from "@/lib/types";
-import { PanelProps, usePanelStatus } from "./common";
+import { adminApi, type AdminMaterial, type MaterialGroup } from "@/lib/admin";
+import { SlotEditor } from "./ImagesPanel";
+import { DRAFT_SAVED, PanelProps, StatusLine, usePanelStatus } from "./common";
 
-/**
- * The slug is derived rather than asked for.
- *
- * It is the material's address on the site, and a person adding "Burr Walnut"
- * has no reason to also be asked for "burr-walnut". The API rejects a
- * duplicate with a 409, which surfaces here as the message it sends back,
- * so a clash is reported rather than guessed at with a suffix.
- */
-function slugFor(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+const GROUPS: MaterialGroup[] = ["Stone", "Timber", "Metal"];
 
-export function MaterialsPanel({ onUnauthorised }: PanelProps) {
+export function MaterialsPanel({ onUnauthorised, onDraftChanged }: PanelProps) {
   const { status, tone, report, say } = usePanelStatus(onUnauthorised);
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [library, setLibrary] = useState<ImageRef[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [materials, setMaterials] = useState<AdminMaterial[]>([]);
+  const [note, setNote] = useState("");
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [m, i] = await Promise.all([adminApi.materials(), adminApi.images()]);
-      setMaterials(m);
-      setLibrary(i);
-      setSelectedId((current) => current ?? m[0]?.id ?? null);
+      const body = await adminApi.materials();
+      setMaterials(body.materials);
+      setNote(body.note);
+      // The list is grouped Stone, Timber, Metal, so open on the first one shown.
+      const first = GROUPS.map((g) => body.materials.find((m) => m.group === g)).find(Boolean);
+      setSelectedSlug((current) => current ?? first?.slug ?? null);
     } catch (error) {
       report(error);
     }
@@ -43,35 +31,22 @@ export function MaterialsPanel({ onUnauthorised }: PanelProps) {
     void load();
   }, [load]);
 
-  const selected = materials.find((m) => m.id === selectedId) ?? null;
+  const selected = materials.find((m) => m.slug === selectedSlug) ?? null;
 
-  /*
-   * Adding a material.
-   *
-   * The endpoint and the client method have both existed since the console
-   * was built; nothing called them, so the library was fixed at whatever the
-   * seed had put there and the three burl timbers had no way in. Only a name
-   * and a family are asked for here. Everything else, including the swatch
-   * colour and the photograph, is set in the form beside the list once the
-   * material exists.
-   */
   async function create(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const name = String(data.get("new_name") ?? "").trim();
-    if (!name) return;
-
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       const created = await adminApi.createMaterial({
-        slug: slugFor(name),
-        name,
-        family: String(data.get("new_family") ?? "marble"),
+        name: String(form.get("name") ?? "").trim(),
+        group: String(form.get("group")) as MaterialGroup,
       });
       setMaterials((current) => [...current, created]);
-      setSelectedId(created.id);
-      form.reset();
-      say(`Added ${created.name}. Set its provenance and swatch beside the list.`);
+      setSelectedSlug(created.slug);
+      formElement.reset();
+      say(`${created.name} added. ${DRAFT_SAVED}`);
+      onDraftChanged();
     } catch (error) {
       report(error);
     }
@@ -81,21 +56,43 @@ export function MaterialsPanel({ onUnauthorised }: PanelProps) {
     event.preventDefault();
     if (!selected) return;
     const form = new FormData(event.currentTarget);
-    const imageId = String(form.get("image_id") ?? "");
+    const text = (key: string) => String(form.get(key) ?? "").trim();
     try {
-      const updated = await adminApi.updateMaterial(selected.id, {
-        name: String(form.get("name") ?? ""),
-        family: String(form.get("family") ?? "marble"),
-        description: String(form.get("description") ?? "") || null,
-        finish: String(form.get("finish") ?? "") || null,
-        quarry: String(form.get("quarry") ?? "") || null,
-        region: String(form.get("region") ?? "") || null,
-        origin: String(form.get("origin") ?? "Italy"),
-        swatch_hex: String(form.get("swatch_hex") ?? "") || null,
-        image_id: imageId === "" ? null : Number(imageId),
+      const updated = await adminApi.updateMaterial(selected.slug, {
+        name: text("name"),
+        group: text("group") as MaterialGroup,
+        attributes: text("attributes"),
+        swatch: text("swatch"),
+        description: text("description"),
       });
-      setMaterials((current) => current.map((m) => (m.id === updated.id ? updated : m)));
-      say("Saved.");
+      setMaterials((current) => current.map((m) => (m.slug === updated.slug ? updated : m)));
+      say(DRAFT_SAVED);
+      onDraftChanged();
+    } catch (error) {
+      report(error);
+    }
+  }
+
+  async function remove(material: AdminMaterial) {
+    if (!window.confirm(`Remove ${material.name} from the library?`)) return;
+    try {
+      await adminApi.deleteMaterial(material.slug);
+      setMaterials((current) => current.filter((m) => m.slug !== material.slug));
+      setSelectedSlug(null);
+      say(DRAFT_SAVED);
+      onDraftChanged();
+    } catch (error) {
+      report(error);
+    }
+  }
+
+  async function saveNote(value: string) {
+    if (value === note) return;
+    try {
+      await adminApi.updateMaterialsNote(value);
+      setNote(value);
+      say(DRAFT_SAVED);
+      onDraftChanged();
     } catch (error) {
       report(error);
     }
@@ -104,143 +101,146 @@ export function MaterialsPanel({ onUnauthorised }: PanelProps) {
   return (
     <div className="admin__grid">
       <div>
-        <p className="admin-field" style={{ marginBottom: 10 }}>
-          <label>Materials library</label>
-        </p>
         <ul className="admin-list">
-          {materials.map((material) => (
-            <li key={material.id}>
-              <button
-                type="button"
-                data-active={material.id === selectedId}
-                onClick={() => setSelectedId(material.id)}
-              >
-                {material.name}
-                <span className="meta">{material.family}</span>
-              </button>
+          {GROUPS.map((group) => (
+            <li key={group} style={{ borderBottom: "none" }}>
+              <p className="admin-field" style={{ padding: "12px 8px 4px", margin: 0 }}>
+                <label>{group}</label>
+              </p>
+              <ul className="admin-list" style={{ borderTop: "none", maxHeight: "none" }}>
+                {materials
+                  .filter((m) => m.group === group)
+                  .map((material) => (
+                    <li key={material.slug}>
+                      <button
+                        type="button"
+                        data-active={material.slug === selectedSlug}
+                        onClick={() => setSelectedSlug(material.slug)}
+                      >
+                        <span
+                          className="swatch-dot"
+                          style={{ backgroundColor: material.swatch }}
+                          aria-hidden="true"
+                        />
+                        {material.name}
+                        <span className="meta">{material.attributes}</span>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
             </li>
           ))}
         </ul>
 
-        <form className="admin-form" onSubmit={create} style={{ marginTop: 16 }}>
+        <h2 className="admin-heading">Add a material</h2>
+        <form className="admin-form" onSubmit={create}>
           <div className="admin-field">
-            <label htmlFor="m-new-name">Add a material</label>
-            <input
-              id="m-new-name"
-              name="new_name"
-              placeholder="Burr Walnut"
-              required
-            />
+            <label htmlFor="m-new-name">Name</label>
+            <input id="m-new-name" name="name" required maxLength={120} />
           </div>
           <div className="admin-field">
-            <label htmlFor="m-new-family">Family</label>
-            <select id="m-new-family" name="new_family" defaultValue="timber">
-              <option value="marble">marble</option>
-              <option value="timber">timber</option>
-              <option value="metal">metal</option>
+            <label htmlFor="m-new-group">Group</label>
+            <select id="m-new-group" name="group" defaultValue="Stone">
+              {GROUPS.map((g) => (
+                <option key={g}>{g}</option>
+              ))}
             </select>
           </div>
-          <button type="submit">Add</button>
+          <div className="admin-actions">
+            <button type="submit" className="admin-button">
+              Add
+            </button>
+          </div>
         </form>
       </div>
 
       <div>
-        <p className="admin-note">
-          Provenance is stated by quarry and region, never by country alone. Two
-          blocks from the same country can behave nothing alike, and the
-          specific source is what the product page prints.
-        </p>
+        <StatusLine status={status} tone={tone} />
 
-        {status && (
-          <p className="admin-status" data-tone={tone} role="status">
-            {status}
-          </p>
-        )}
+        <div className="admin-field" style={{ maxWidth: 640, marginBottom: 32 }}>
+          <label htmlFor="m-note">Note at the top of the Materials page</label>
+          <textarea
+            id="m-note"
+            key={note}
+            defaultValue={note}
+            onBlur={(event) => saveNote(event.target.value)}
+          />
+        </div>
 
         {selected && (
-          <form className="admin-form" onSubmit={save} key={selected.id}>
-            <div className="row">
-              <div className="admin-field">
-                <label htmlFor="m-name">Name</label>
-                <input id="m-name" name="name" defaultValue={selected.name} required />
+          <>
+            <form className="admin-form" onSubmit={save} key={selected.slug}>
+              <p className="admin-note">
+                /atelier/materials/{selected.slug}. Pieces refer to a material by its
+                name, so renaming one here leaves pieces that use the old name marked
+                &ldquo;not in library&rdquo; until they are updated.
+              </p>
+              <div className="row">
+                <div className="admin-field">
+                  <label htmlFor="m-name">Name</label>
+                  <input id="m-name" name="name" defaultValue={selected.name} required />
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="m-group">Group</label>
+                  <select id="m-group" name="group" defaultValue={selected.group}>
+                    {GROUPS.map((g) => (
+                      <option key={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="row">
+                <div className="admin-field">
+                  <label htmlFor="m-attributes">Attributes</label>
+                  <input
+                    id="m-attributes"
+                    name="attributes"
+                    defaultValue={selected.attributes}
+                    placeholder="Marble · Italy"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="m-swatch">Swatch colour</label>
+                  <input
+                    id="m-swatch"
+                    name="swatch"
+                    type="color"
+                    defaultValue={selected.swatch}
+                    style={{ height: 36, padding: 2 }}
+                  />
+                </div>
               </div>
               <div className="admin-field">
-                <label htmlFor="m-family">Family</label>
-                <select id="m-family" name="family" defaultValue={selected.family}>
-                  <option value="marble">marble</option>
-                  <option value="timber">timber</option>
-                  <option value="metal">metal</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="admin-field">
-                <label htmlFor="m-quarry">Quarry</label>
-                <input id="m-quarry" name="quarry" defaultValue={selected.quarry ?? ""} />
-              </div>
-              <div className="admin-field">
-                <label htmlFor="m-region">Region</label>
-                <input id="m-region" name="region" defaultValue={selected.region ?? ""} />
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="admin-field">
-                <label htmlFor="m-origin">Country</label>
-                <input id="m-origin" name="origin" defaultValue={selected.origin} />
-              </div>
-              <div className="admin-field">
-                <label htmlFor="m-finish">Finish</label>
-                <input id="m-finish" name="finish" defaultValue={selected.finish ?? ""} />
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="admin-field">
-                <label htmlFor="m-swatch">Swatch colour</label>
-                <input
-                  id="m-swatch"
-                  name="swatch_hex"
-                  type="color"
-                  defaultValue={selected.swatch_hex ?? "#c4aa98"}
+                <label htmlFor="m-description">Description</label>
+                <textarea
+                  id="m-description"
+                  name="description"
+                  defaultValue={selected.description}
                 />
-                <span className="hint">
-                  Used only for the small swatch row on a product page. The
-                  photograph remains the honest representation of the material,
-                  and the product page says so.
-                </span>
               </div>
-              <div className="admin-field" />
-            </div>
+              <div className="admin-actions">
+                <button type="submit" className="admin-button">
+                  Save to draft
+                </button>
+                <button
+                  type="button"
+                  className="admin-button admin-button--quiet"
+                  onClick={() => remove(selected)}
+                >
+                  Remove material
+                </button>
+              </div>
+            </form>
 
-            <div className="admin-field">
-              <label htmlFor="m-description">Description</label>
-              <textarea
-                id="m-description"
-                name="description"
-                defaultValue={selected.description ?? ""}
-              />
-            </div>
-
-            <div className="admin-field">
-              <label htmlFor="m-image">Photograph</label>
-              <select id="m-image" name="image_id" defaultValue={selected.image?.id ?? ""}>
-                <option value="">None</option>
-                {library.map((image) => (
-                  <option key={image.id} value={image.id}>
-                    {image.filename}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="admin-actions">
-              <button className="admin-button" type="submit">
-                Save material
-              </button>
-            </div>
-          </form>
+            <h2 className="admin-heading">Sample photograph</h2>
+            <SlotEditor
+              key={`material.${selected.slug}`}
+              slotKey={`material.${selected.slug}`}
+              ratio="3/2"
+              onMessage={say}
+              onError={report}
+            />
+          </>
         )}
       </div>
     </div>
