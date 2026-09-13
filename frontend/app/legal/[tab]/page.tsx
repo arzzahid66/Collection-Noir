@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { Prose } from "@/components/Prose";
+import { Prose, visibleBody } from "@/components/Prose";
 import { getPage } from "@/lib/api";
 import { LEGAL_SLUGS } from "@/lib/nav";
 
@@ -38,7 +38,11 @@ export default async function LegalTabPage({ params }: Props) {
     <>
       <h1>{page?.title ?? "Legal"}</h1>
       <div style={{ marginTop: 28 }}>
-        {page ? <Prose body={page.body} /> : <p>This page is being prepared.</p>}
+        {page && visibleBody(page.body) !== "" ? (
+          <Prose body={page.body} />
+        ) : (
+          <p>This page is being prepared.</p>
+        )}
       </div>
     </>
   );

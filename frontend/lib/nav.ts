@@ -9,10 +9,14 @@ export interface NavItem {
  * Primary navigation, section 2: Collection, Atelier, Trade, Enquire. Four
  * items, right aligned, in that order.
  *
- * Atelier is one item that reveals a panel on hover, holding exactly The
- * Atelier and Materials. Clicking Atelier itself still navigates to the
+ * Atelier is one item that reveals a panel on hover, holding The Atelier,
+ * Bespoke and Materials. Clicking Atelier itself still navigates to the
  * atelier page. Care is reached from the body of that page, as section 8
  * sets it, rather than from here.
+ *
+ * Bespoke sits second, between the brand story and the material library: it
+ * is the proposition a reader of the atelier page is next in line for, and
+ * the materials are the reference they reach for after it.
  */
 export const PRIMARY_NAV: NavItem[] = [
   { href: "/collection", label: "Collection" },
@@ -21,6 +25,7 @@ export const PRIMARY_NAV: NavItem[] = [
     label: "Atelier",
     children: [
       { href: "/atelier", label: "The Atelier" },
+      { href: "/atelier/bespoke", label: "Bespoke" },
       { href: "/atelier/materials", label: "Materials" },
     ],
   },

@@ -1,2 +1,5 @@
 .vercel
+# Never commit real values, only the example templates.
 .env*
+!.env.example
+!.env.*.example

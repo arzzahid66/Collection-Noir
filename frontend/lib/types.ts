@@ -112,6 +112,8 @@ export interface ProductDetail extends ProductSummary {
   care_guide: string | null;
   images: ProductImageLink[];
   materials: ProductMaterialLink[];
+  /** "Also consider" pieces chosen in the console, published ones only. */
+  related: ProductSummary[];
 }
 
 export interface Page {

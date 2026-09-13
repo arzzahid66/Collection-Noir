@@ -55,19 +55,21 @@ export default async function ProductPage({ params }: Props) {
   /*
    * "Also consider", section 7.4.11.
    *
-   * The catalogue records one relationship between pieces, the pairing, and
-   * nothing else. So these are derived: the other pieces in this collection
-   * that a visitor could actually commission today. The API already filters
-   * to live and priced, and the pairing is excluded because it is named in
-   * its own block a few lines above.
+   * Up to three pieces can be chosen in the console, and are shown as chosen.
+   * Where none are, they are derived: the other pieces in this collection that
+   * a visitor could actually commission today. The API already filters to live
+   * and priced, and the pairing is excluded because it is named in its own
+   * block a few lines above.
    */
-  const related = (await getProducts(product.category_slug))
-    .filter(
-      (candidate) =>
-        candidate.slug !== product.slug &&
-        candidate.slug !== product.cross_link?.slug,
-    )
-    .slice(0, 3);
+  const related = product.related.length
+    ? product.related
+    : (await getProducts(product.category_slug))
+        .filter(
+          (candidate) =>
+            candidate.slug !== product.slug &&
+            candidate.slug !== product.cross_link?.slug,
+        )
+        .slice(0, 3);
 
   return (
     <>

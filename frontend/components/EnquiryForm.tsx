@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { submitForm } from "@/lib/forms";
+
 /**
  * The enquiry form, figure 11.
  *
@@ -10,9 +12,8 @@ import { useState } from "react";
  * nothing is held in stock, so this is the only transactional surface at
  * launch and the submit reads "Send enquiry".
  *
- * Location has no column of its own on the enquiry record, so it is carried
- * into the message under a label rather than dropped. If the atelier starts
- * reporting on it, it earns a column.
+ * Each field is sent under the label the atelier's inbox and export use, and
+ * an enquiry from a product page names the piece as "regarding".
  */
 export function EnquiryForm({
   productId,
@@ -31,39 +32,23 @@ export function EnquiryForm({
 
     const form = new FormData(event.currentTarget);
     const value = (key: string) => String(form.get(key) ?? "").trim();
-    const location = value("location");
-    const enquiry = value("message");
 
-    const payload = {
-      type: productId ? "product" : "general",
-      name: [value("first_name"), value("last_name")].filter(Boolean).join(" "),
-      email: value("email"),
-      phone: value("phone") || null,
-      company: null,
-      message: location ? `Location: ${location}\n\n${enquiry}` : enquiry,
-      product_id: productId ?? null,
-    };
-
-    try {
-      const response = await fetch("/api/enquiries", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        setError(
-          response.status === 422
-            ? "Please check the email address and try again."
-            : "That did not send. Please try again, or write to the atelier directly.",
-        );
-        setState("error");
-        return;
-      }
+    const result = await submitForm(
+      "enquiry",
+      {
+        "First Name": value("first_name"),
+        "Last Name": value("last_name"),
+        Email: value("email"),
+        "Phone (optional)": value("phone"),
+        Location: value("location"),
+        Message: value("message"),
+      },
+      productLabel ?? "",
+    );
+    if (result.ok) {
       setState("sent");
-    } catch {
-      setError(
-        "That did not send. Please try again, or write to the atelier directly.",
-      );
+    } else {
+      setError(result.message);
       setState("error");
     }
   }

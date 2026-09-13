@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Prose } from "@/components/Prose";
-import { getPage } from "@/lib/api";
+import { Prose, visibleBody } from "@/components/Prose";
+import { getPage, getSlotImage } from "@/lib/api";
 
 export const metadata: Metadata = { title: "The Atelier" };
 
@@ -18,11 +18,12 @@ export const dynamic = "force-dynamic";
  * in markup, so the brand team edits it in the console. Section 04.
  */
 export default async function AtelierPage() {
-  const [page, founder, designers, press] = await Promise.all([
+  const [page, founder, designers, press, portrait] = await Promise.all([
     getPage("atelier"),
     getPage("atelier-founder"),
     getPage("atelier-designers"),
     getPage("atelier-press"),
+    getSlotImage("founder"),
   ]);
 
   const publications = (press?.body ?? "")
@@ -46,29 +47,43 @@ export default async function AtelierPage() {
         {page && <Prose body={page.body} />}
       </section>
 
-      {founder && (
-        <section className="founder-block">
-          <p className="eyebrow">The Founder</p>
-          <div className="founder">
-            {/* TODO(client): the founder portrait is a placeholder block in the
-                approved mockup and no photograph has been supplied. */}
+      {/* The portrait mount and the role line are fixed parts of the approved
+          layout, so the block is no longer gated on its page record: with the
+          record missing the whole section used to leave the page, and the
+          photography placeholder with it. The name and the quote are the only
+          parts the record owns, and they are the only parts that wait. */}
+      <section className="founder-block">
+        <p className="eyebrow">The Founder</p>
+        <div className="founder">
+          {/* The `founder` image slot, set in the console. The mount stands in
+              until a portrait is uploaded. */}
+          {portrait ? (
+            <div
+              className="founder__portrait"
+              style={{ backgroundImage: `url(${portrait.url})` }}
+              role="img"
+              aria-label={founder?.title ?? "The founder"}
+            />
+          ) : (
             <div className="founder__portrait" role="presentation" />
-            <div>
-              <p className="founder__name">{founder.title}</p>
-              <p className="founder__role">
-                Founder and Designer, Collection Noir Atelier, London
-              </p>
-              {/* The approved mockup marks this quote as pending and asks for
-                  real words or sign off before publishing. It is rendered from
-                  the page record so the brand team can replace it without a
-                  deploy, and it carries the placeholder marker until they do. */}
+          )}
+          <div>
+            {founder && <p className="founder__name">{founder.title}</p>}
+            <p className="founder__role">
+              Founder and Designer, Collection Noir Atelier, London
+            </p>
+            {/* The approved mockup marks this quote as pending and asks for
+                real words or sign off before publishing. It is rendered from
+                the page record so the brand team can replace it without a
+                deploy, and it carries the placeholder marker until they do. */}
+            {founder && visibleBody(founder.body) !== "" && (
               <blockquote>
                 <Prose body={founder.body} measure="measure-quote" />
               </blockquote>
-            </div>
+            )}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* The heading, the paragraph and the call to action are centred as one
           group. The eyebrow above them is not: it stays left, which is how

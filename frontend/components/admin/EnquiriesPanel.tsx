@@ -2,89 +2,187 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { adminApi } from "@/lib/admin";
-import type { Enquiry } from "@/lib/types";
-import { PanelProps, usePanelStatus } from "./common";
+import { adminApi, type Submission } from "@/lib/admin";
+import { PanelProps, StatusLine, formatDate, usePanelStatus } from "./common";
 
-/**
- * Formats a timestamp identically on the server and in the browser.
- *
- * toLocaleDateString resolves against the host's locale and timezone, so the
- * server and the client can disagree and produce a hydration mismatch. The
- * parts are read explicitly instead.
- */
-function received(timestamp: string): string {
-  const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return "";
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  return `${day}/${month}/${date.getUTCFullYear()}`;
+type Filter = "all" | "enquiry" | "trade" | "unread";
+
+/** The order the inbox export uses. Anything else follows, as it arrived. */
+const FIELD_ORDER = [
+  "First Name",
+  "Last Name",
+  "Studio Name",
+  "Company",
+  "Email",
+  "Phone (optional)",
+  "Phone",
+  "Location",
+  "Website",
+  "Company Reg. Number",
+  "VAT Number",
+  "Registered Address",
+  "Message",
+];
+
+function ordered(fields: Record<string, string>): [string, string][] {
+  const rank = (label: string) => {
+    const index = FIELD_ORDER.indexOf(label);
+    return index === -1 ? FIELD_ORDER.length : index;
+  };
+  return Object.entries(fields).sort(([a], [b]) => rank(a) - rank(b));
 }
 
+/**
+ * Enquiries and trade applications from the site.
+ *
+ * Submissions caught by the spam checks are kept rather than dropped, so a
+ * false positive can still be found; they sit behind their own toggle.
+ */
 export function EnquiriesPanel({ onUnauthorised }: PanelProps) {
-  const { status, tone, report } = usePanelStatus(onUnauthorised);
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const { status, tone, report, say } = usePanelStatus(onUnauthorised);
+  const [items, setItems] = useState<Submission[]>([]);
+  const [unread, setUnread] = useState(0);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [spam, setSpam] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      setEnquiries(await adminApi.enquiries());
+      const body = await adminApi.submissions(spam);
+      setItems(body.submissions);
+      setUnread(body.unread);
     } catch (error) {
       report(error);
     }
-  }, [report]);
+  }, [report, spam]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  async function toggleRead(item: Submission) {
+    try {
+      const updated = await adminApi.markRead(item.id, !item.read);
+      setItems((current) => current.map((s) => (s.id === item.id ? updated : s)));
+      setUnread((n) => n + (updated.read ? -1 : 1));
+    } catch (error) {
+      report(error);
+    }
+  }
+
+  async function remove(item: Submission) {
+    if (!window.confirm("Delete this submission permanently?")) return;
+    try {
+      await adminApi.deleteSubmission(item.id);
+      setItems((current) => current.filter((s) => s.id !== item.id));
+      say("Deleted.");
+    } catch (error) {
+      report(error);
+    }
+  }
+
+  async function exportCsv() {
+    try {
+      const blob = await adminApi.exportCsv();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `collection-noir-inbox-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      report(error);
+    }
+  }
+
+  const shown = items.filter((item) =>
+    filter === "all" ? true : filter === "unread" ? !item.read : item.kind === filter,
+  );
+
   return (
     <>
       <p className="admin-note">
-        Enquiries submitted through the site. Product enquiries arrive already
-        attached to the piece the client was reading.
+        Everything sent from the enquiry, trade and mailing list forms. Each one is also
+        emailed to the atelier. {unread > 0 && <strong>{unread} unread.</strong>}
       </p>
 
-      {status && (
-        <p className="admin-status" data-tone={tone} role="status">
-          {status}
-        </p>
-      )}
+      <div className="admin-actions" style={{ marginBottom: 20 }}>
+        {(["all", "unread", "enquiry", "trade"] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            className="admin__tab"
+            data-active={filter === f}
+            onClick={() => setFilter(f)}
+          >
+            {f === "all" ? "All" : f === "unread" ? "Unread" : f === "enquiry" ? "Enquiries" : "Trade"}
+          </button>
+        ))}
+        <label className="admin__tab">
+          <input type="checkbox" checked={spam} onChange={(e) => setSpam(e.target.checked)} /> Spam
+        </label>
+        <button type="button" className="admin-button admin-button--quiet" onClick={exportCsv}>
+          Export CSV
+        </button>
+      </div>
 
-      {enquiries.length === 0 ? (
-        <p className="admin-status">No enquiries yet.</p>
+      <StatusLine status={status} tone={tone} />
+
+      {shown.length === 0 ? (
+        <p className="admin-status">Nothing here.</p>
       ) : (
         <table className="admin-table">
           <thead>
             <tr>
               <th>Received</th>
               <th>Type</th>
-              <th>From</th>
-              <th>Enquiry</th>
+              <th>Details</th>
+              <th />
             </tr>
           </thead>
           <tbody>
-            {enquiries.map((enquiry) => (
-              <tr key={enquiry.id}>
-                <td style={{ whiteSpace: "nowrap" }}>{received(enquiry.created_at)}</td>
-                <td>{enquiry.type}</td>
+            {shown.map((item) => (
+              <tr key={item.id} style={{ fontWeight: item.read ? 400 : 600 }}>
+                <td style={{ whiteSpace: "nowrap" }}>{formatDate(item.at)}</td>
                 <td>
-                  {enquiry.name}
-                  <br />
-                  <span className="image-tile__meta">{enquiry.email}</span>
-                  {enquiry.phone && (
+                  {item.kind === "trade" ? "Trade" : "Enquiry"}
+                  {item.regarding && (
                     <>
                       <br />
-                      <span className="image-tile__meta">{enquiry.phone}</span>
+                      <span className="image-tile__meta">Re: {item.regarding}</span>
                     </>
                   )}
-                  {enquiry.company && (
+                  {item.discarded && (
                     <>
                       <br />
-                      <span className="image-tile__meta">{enquiry.company}</span>
+                      <span className="pill">Spam · {item.discardReason}</span>
                     </>
                   )}
                 </td>
-                <td style={{ whiteSpace: "pre-wrap" }}>{enquiry.message}</td>
+                <td>
+                  <dl className="admin-fields">
+                    {ordered(item.fields).map(([label, value]) => (
+                      <div key={label}>
+                        <dt>{label}</dt>
+                        <dd>
+                          {label === "Email" ? <a href={`mailto:${value}`}>{value}</a> : value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </td>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <button
+                    type="button"
+                    className="admin-button--link"
+                    onClick={() => toggleRead(item)}
+                  >
+                    Mark {item.read ? "unread" : "read"}
+                  </button>
+                  <br />
+                  <button type="button" className="admin-button--link" onClick={() => remove(item)}>
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -16,10 +16,31 @@ __pycache__/
 venv/
 *.egg-info/
 
-# Environment
+# Environment - never commit real values, only .env.example
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.*.example
+
+# Server credentials, SSH keys, certificates - NEVER commit
+server_cred
+server_cred/
+.server_cred/
+credentials/
+secrets/
+*.pem
+*.key
+*.ppk
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+*.crt
+known_hosts
+ssh.txt
+*.sqlite3
 
 # Editor / OS
 .vscode/
@@ -28,10 +49,9 @@ venv/
 Thumbs.db
 
 # Build artefacts
-frontend/.vercel
-backend/.pytest_cache/
-
 .vercel
+backend/.pytest_cache/
+*.tsbuildinfo
 
 # The pre-reset repository, kept as a safety net. Never publish it.
 .git-old-backup/

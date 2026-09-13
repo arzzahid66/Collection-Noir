@@ -1,20 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { adminApi, ratioDelta } from "@/lib/admin";
-import type { ImageRef } from "@/lib/types";
-import { PanelProps, usePanelStatus } from "./common";
+import { adminApi, ratioDelta, type ImageSlot, type SlotImage } from "@/lib/admin";
+import { PanelProps, StatusLine, usePanelStatus } from "./common";
 
+/**
+ * Every image slot on the site, grouped by the page it appears on.
+ *
+ * Unlike the rest of the console, an upload is not held in the draft: it
+ * reaches the public site as soon as the photograph has been processed.
+ */
 export function ImagesPanel({ onUnauthorised }: PanelProps) {
   const { status, tone, report, say } = usePanelStatus(onUnauthorised);
-  const [images, setImages] = useState<ImageRef[]>([]);
-  const [preview, setPreview] = useState<"3-2" | "4-5">("4-5");
-  const [busy, setBusy] = useState(false);
+  const [slots, setSlots] = useState<ImageSlot[]>([]);
 
   const load = useCallback(async () => {
     try {
-      setImages(await adminApi.images());
+      setSlots(await adminApi.slots());
     } catch (error) {
       report(error);
     }
@@ -24,128 +27,226 @@ export function ImagesPanel({ onUnauthorised }: PanelProps) {
     void load();
   }, [load]);
 
-  async function upload(files: FileList | null) {
+  const pages = [...new Set(slots.map((slot) => slot.page ?? "Other"))];
+
+  return (
+    <>
+      <p className="admin-note">
+        <strong>Uploads go live straight away</strong>, without publishing. Photographs are
+        resized for the web but never cropped: a photograph that does not match its frame
+        is letterboxed onto the mount colour. Only the homepage hero fills its frame, and
+        its focal point decides what stays in view.
+      </p>
+      <StatusLine status={status} tone={tone} />
+
+      {pages.map((page) => (
+        <section key={page} style={{ marginBottom: 32 }}>
+          <h2 className="admin-heading">{page}</h2>
+          <div className="image-grid image-grid--slots">
+            {slots
+              .filter((slot) => (slot.page ?? "Other") === page)
+              .map((slot) => (
+                <div className="image-tile" key={slot.key}>
+                  <p className="image-tile__meta">
+                    <strong>{slot.name ?? slot.key}</strong> · {slot.ratio}
+                  </p>
+                  <SlotEditor
+                    slotKey={slot.key}
+                    ratio={slot.ratio}
+                    initial={slot}
+                    onMessage={say}
+                    onError={report}
+                  />
+                </div>
+              ))}
+          </div>
+        </section>
+      ))}
+    </>
+  );
+}
+
+/**
+ * One slot: its photographs, replace, add to gallery, revert, and for the
+ * hero a focal point. Used here and on a piece's page in the console.
+ */
+export function SlotEditor({
+  slotKey,
+  ratio,
+  initial,
+  onMessage,
+  onError,
+}: {
+  slotKey: string;
+  ratio: string;
+  initial?: ImageSlot;
+  onMessage: (message: string) => void;
+  onError: (error: unknown) => void;
+}) {
+  const [slot, setSlot] = useState<ImageSlot | null>(initial ?? null);
+  const [busy, setBusy] = useState(false);
+  const poll = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const next = await adminApi.slot(slotKey);
+      setSlot(next);
+      // Sizes are generated after the upload returns. Check back until done.
+      const pending = [next.image, ...next.gallery].some((i) => i?.status === "processing");
+      if (pending) poll.current = setTimeout(() => void refresh(), 2500);
+    } catch (error) {
+      onError(error);
+    }
+  }, [slotKey, onError]);
+
+  useEffect(() => {
+    if (!initial) void refresh();
+    return () => {
+      if (poll.current) clearTimeout(poll.current);
+    };
+  }, [initial, refresh]);
+
+  async function upload(files: FileList | null, append: boolean) {
     if (!files || files.length === 0) return;
     setBusy(true);
     try {
+      let first = !append;
       for (const file of Array.from(files)) {
-        await adminApi.uploadImage(file);
+        // The first file replaces when asked to; any further ones are added.
+        await adminApi.upload(slotKey, file, !first);
+        first = false;
       }
-      await load();
-      say(`Uploaded ${files.length === 1 ? "one photograph" : `${files.length} photographs`}.`);
+      onMessage("Uploaded. It is live once processing finishes.");
+      await refresh();
     } catch (error) {
-      report(error);
+      onError(error);
     } finally {
       setBusy(false);
     }
   }
 
+  async function revert() {
+    if (!window.confirm("Remove the uploaded photographs from this slot? This is live at once.")) {
+      return;
+    }
+    setBusy(true);
+    try {
+      await adminApi.clearSlot(slotKey);
+      onMessage("Slot cleared.");
+      await refresh();
+    } catch (error) {
+      onError(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function focus(event: React.MouseEvent<HTMLDivElement>) {
+    if (slotKey !== "hero" || !slot?.image) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const x = Math.round(((event.clientX - box.left) / box.width) * 100) / 100;
+    const y = Math.round(((event.clientY - box.top) / box.height) * 100) / 100;
+    try {
+      setSlot(await adminApi.focalPoint(slotKey, x, y));
+      onMessage(`Focal point set to ${Math.round(x * 100)}% across, ${Math.round(y * 100)}% down.`);
+    } catch (error) {
+      onError(error);
+    }
+  }
+
+  if (!slot) return <p className="admin-status">Loading photographs.</p>;
+
+  const photos = [slot.image, ...slot.gallery].filter(
+    (photo, index, all): photo is SlotImage =>
+      photo !== null && all.findIndex((p) => p?.id === photo.id) === index,
+  );
+  const frame = ratio.replace("/", " / ");
+
   return (
-    <>
-      <p className="admin-note">
-        Photographs are stored exactly as uploaded. Nothing is cropped, resized
-        or re-encoded at any point, which is why a supplied image can be trusted
-        to appear as it was shot.
-        <br />
-        <br />
-        Use the preview toggle to see how an image sits inside each category
-        frame before attaching it to a piece. Within five per cent of the target
-        the image sits close to edge to edge. Beyond that it letterboxes onto
-        the mount colour, which is correct but worth seeing first.
-      </p>
-
-      <div className="admin-actions" style={{ marginBottom: 24 }}>
-        <div className="admin-field" style={{ maxWidth: 320 }}>
-          <label htmlFor="upload">Upload photography</label>
-          <input
-            id="upload"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            disabled={busy}
-            onChange={(event) => upload(event.target.files)}
-          />
-          <span className="hint">JPEG for product photography, PNG for logo and interface assets.</span>
+    <div className="slot">
+      {photos.length === 0 ? (
+        <div className="slot__photos">
+          <div className="image-tile__preview" style={{ aspectRatio: frame }}>
+            <span className="image-tile__meta">No photograph</span>
+          </div>
         </div>
-
-        <div className="admin-field" style={{ maxWidth: 200 }}>
-          <label htmlFor="preview-ratio">Preview against</label>
-          <select
-            id="preview-ratio"
-            value={preview}
-            onChange={(event) => setPreview(event.target.value as "3-2" | "4-5")}
-          >
-            <option value="3-2">3:2 · dining and coffee tables</option>
-            <option value="4-5">4:5 · consoles, side, bedside, plinths</option>
-          </select>
-        </div>
-      </div>
-
-      {status && (
-        <p className="admin-status" data-tone={tone} role="status">
-          {status}
-        </p>
-      )}
-
-      {images.length === 0 ? (
-        <p className="admin-status">No photography uploaded yet.</p>
       ) : (
-        <div className="image-grid">
-          {images.map((image) => {
-            const check = ratioDelta(image, preview);
+        <div className="slot__photos">
+          {photos.map((photo, index) => {
+            const check = ratioDelta(photo, ratio);
+            const hero = slotKey === "hero" && index === 0;
             return (
-              <div className="image-tile" key={image.id}>
+              <figure key={photo.id} className="slot__photo">
                 <div
-                  className={`image-tile__preview ratio-${preview}`}
-                  style={{ backgroundImage: `url(${image.url})` }}
-                  role="img"
-                  aria-label={image.alt_text ?? image.filename}
-                />
-                <span className="ratio-badge" data-ok={check.withinTolerance}>
-                  {check.label}
-                </span>
-                <p className="image-tile__meta">{image.filename}</p>
-                <p className="image-tile__meta">
-                  {image.width} × {image.height} · {Math.round(image.byte_size / 1024)}kB
-                </p>
-                <div className="admin-field" style={{ marginTop: 8 }}>
-                  <label htmlFor={`alt-${image.id}`}>Alternative text</label>
-                  <input
-                    id={`alt-${image.id}`}
-                    defaultValue={image.alt_text ?? ""}
-                    placeholder="Calacatta Viola. The Roma dining table."
-                    onBlur={async (event) => {
-                      if (event.target.value === (image.alt_text ?? "")) return;
-                      try {
-                        await adminApi.updateImage(image.id, event.target.value);
-                        say("Alternative text saved.");
-                      } catch (error) {
-                        report(error);
-                      }
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="admin-button admin-button--quiet"
-                  style={{ marginTop: 8 }}
-                  onClick={async () => {
-                    try {
-                      await adminApi.deleteImage(image.id);
-                      await load();
-                      say("Photograph deleted.");
-                    } catch (error) {
-                      report(error);
-                    }
+                  className="image-tile__preview"
+                  onClick={hero ? focus : undefined}
+                  title={hero ? "Click to set the focal point" : undefined}
+                  style={{
+                    aspectRatio: frame,
+                    backgroundImage: `url(${photo.fallback})`,
+                    backgroundColor: slot.fill,
+                    backgroundSize: slot.fit === "cover" ? "cover" : "contain",
+                    backgroundPosition: `${photo.focal_point.x * 100}% ${photo.focal_point.y * 100}%`,
+                    cursor: hero ? "crosshair" : undefined,
                   }}
-                >
-                  Delete
-                </button>
-              </div>
+                />
+                <figcaption className="image-tile__meta">
+                  {index === 0 ? "Main" : `Gallery ${index}`} · {photo.width} × {photo.height}
+                  {photo.status !== "ready" && ` · ${photo.status}`}
+                </figcaption>
+                {slot.fit !== "cover" && (
+                  <span className="ratio-badge" data-ok={check.withinTolerance}>
+                    {check.label}
+                  </span>
+                )}
+              </figure>
             );
           })}
         </div>
       )}
-    </>
+
+      <div className="admin-actions" style={{ marginTop: 10 }}>
+        <label className="admin-button admin-button--quiet" aria-disabled={busy}>
+          {photos.length ? "Replace" : "Upload"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            disabled={busy}
+            onChange={(event) => {
+              void upload(event.target.files, false);
+              event.target.value = "";
+            }}
+          />
+        </label>
+        {photos.length > 0 && (
+          <label className="admin-button admin-button--quiet" aria-disabled={busy}>
+            Add to gallery
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              hidden
+              disabled={busy}
+              onChange={(event) => {
+                void upload(event.target.files, true);
+                event.target.value = "";
+              }}
+            />
+          </label>
+        )}
+        {slot.status === "custom" && (
+          <button
+            type="button"
+            className="admin-button admin-button--quiet"
+            disabled={busy}
+            onClick={revert}
+          >
+            Clear
+          </button>
+        )}
+        {busy && <span className="admin-status">Uploading</span>}
+      </div>
+    </div>
   );
 }

@@ -86,6 +86,7 @@
   --cn-font: var(--font-cormorant), "Cormorant Garamond", Georgia,
     "Times New Roman", serif;
 
+
   /* Type scale, section 1.4 of the specification.
    *
    * Note where 15px and 16px fall. Italic captions and prices are 15px, the

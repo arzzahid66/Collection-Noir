@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 
+import { submitForm } from "@/lib/forms";
+
 /**
  * Trade registration, figure 10.
  *
  * Eight fields across two rows: first name, last name, studio name, email,
  * website, company registration number, VAT number, registered address.
  *
- * The enquiry record carries a name, an email, a telephone, a company and a
- * message. The studio name maps onto company; the remaining trade specific
- * details are composed into the message under labels rather than dropped, so
- * an application arrives complete in the enquiry inbox. Dedicated columns are
- * logged as a candidate if trade volume makes reporting on them worthwhile.
+ * Sent as a trade application, every field under the label the atelier's
+ * inbox and export use, so an application arrives complete.
  */
 const DETAIL_FIELDS: { name: string; label: string; type?: string }[] = [
   { name: "website", label: "Website", type: "url" },
@@ -33,43 +32,17 @@ export function TradeForm() {
     const form = new FormData(event.currentTarget);
     const value = (key: string) => String(form.get(key) ?? "").trim();
 
-    const details = DETAIL_FIELDS.map(({ name, label }) => {
-      const entry = value(name);
-      return entry ? `${label}: ${entry}` : null;
-    }).filter(Boolean);
-
-    const payload = {
-      type: "trade",
-      name: [value("first_name"), value("last_name")].filter(Boolean).join(" "),
-      email: value("email"),
-      phone: null,
-      company: value("studio_name") || null,
-      message: details.length
-        ? details.join("\n")
-        : "Trade registration, no further details supplied.",
-      product_id: null,
-    };
-
-    try {
-      const response = await fetch("/api/enquiries", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        setError(
-          response.status === 422
-            ? "Please check the email address and try again."
-            : "That did not send. Please try again, or write to the atelier directly.",
-        );
-        setState("error");
-        return;
-      }
+    const result = await submitForm("trade", {
+      "First Name": value("first_name"),
+      "Last Name": value("last_name"),
+      "Studio Name": value("studio_name"),
+      Email: value("email"),
+      ...Object.fromEntries(DETAIL_FIELDS.map(({ name, label }) => [label, value(name)])),
+    });
+    if (result.ok) {
       setState("sent");
-    } catch {
-      setError(
-        "That did not send. Please try again, or write to the atelier directly.",
-      );
+    } else {
+      setError(result.message);
       setState("error");
     }
   }
