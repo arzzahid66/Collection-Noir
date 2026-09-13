@@ -202,8 +202,8 @@ test("the sitemap exists and lists only publicly visible pieces", async () => {
   assert.ok(listed.length > 0, "the sitemap lists no pieces at all");
 
   // Exactly the pieces the API is willing to serve, no more and no fewer.
-  const response = await fetch(`${SITE}/api/products`);
-  const visible = (await response.json()).map((p) => p.slug).sort();
+  const response = await fetch(`${SITE}/api/v1/products?limit=500`);
+  const visible = (await response.json()).products.map((p) => p.slug).sort();
   assert.deepEqual(listed.sort(), visible, "the sitemap and the API disagree");
 
   const { raw: robots } = await page("/robots.txt");
@@ -993,10 +993,11 @@ test("the product page matches figure 3", async () => {
     2,
     "the product page does not carry the Enquire call to action twice",
   );
-  // The material shown, as the approved design sets the caption.
-  assert.match(html, /MARQUINA — SHOWN/);
+  // The material shown, as the approved design sets the caption. The Roma is
+  // photographed in Calacatta Viola, so that is the stone the API marks shown.
+  assert.match(html, /VIOLA — SHOWN/);
   assert.match(html, /product__material-label">Material</);
-  assert.match(html, /swatch__name[^>]*>MARQUINA</);
+  assert.match(html, /swatch__name[^>]*>VIOLA</);
   assert.match(html, /panel__label">Bespoke Commissions</);
 
   const labels = [...html.matchAll(/<dt>([^<]+)<\/dt>/g)].map((m) => m[1]);
@@ -1017,7 +1018,8 @@ test("the swatch row renders one swatch per finish", async () => {
   // Each swatch is named beneath it by the distinguishing word of the
   // material, uppercase, which is how the approved design labels the row.
   const names = [...html.matchAll(/swatch__name"[^>]*>([^<]+)</g)].map((m) => m[1]);
-  assert.deepEqual(names, ["MARQUINA", "VIOLA", "VERDE", "CLASSIC"]);
+  // The shown stone leads the row.
+  assert.deepEqual(names, ["VIOLA", "MARQUINA", "VERDE", "CLASSIC"]);
   const colours = [...html.matchAll(/background-color:\s*([^;"]+)/g)].map((m) => m[1].trim());
   assert.equal(colours.length, 4, "every finish needs a swatch colour");
 });
